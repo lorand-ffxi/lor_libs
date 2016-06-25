@@ -8,8 +8,6 @@ _libs.lor.req('functional')
 _libs.lor.req('strings')
 _libs.lor.req('tables')
 _libs.lor.req('chat')
-_libs.lor.req('functional')
-_libs.lor.req('functional')
 
 
 --[[
