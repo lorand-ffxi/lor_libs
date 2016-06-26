@@ -9,7 +9,7 @@ lor_exec._author = 'Ragnarok.Lorand'
 lor_exec._version = '2016.06.26'
 
 require('lor/lor_utils')
-_libs.req('maths')
+_libs.req('maths', 'strings', 'tables')
 _libs.lor.req('chat')
 _libs.lor.exec = lor_exec
 

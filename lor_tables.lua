@@ -9,8 +9,7 @@ lor_tables._author = 'Ragnarok.Lorand'
 lor_tables._version = '2016.06.26'
 
 require('lor/lor_utils')
-_libs.req('tables', 'maths')
-_libs.lor.req('strings')
+_libs.req('tables')
 _libs.lor.tables = lor_tables
 
 
@@ -22,18 +21,18 @@ end
 
 
 function table.keys(t)
-    local keys = T()
+    local ktbl = {}
     local i = 1
     for k,_ in pairs(t) do
-        keys[i] = k
+        ktbl[i] = k
         i = i + 1
     end
-    return keys
+    return ktbl
 end
 
 
 function table.values(t)
-    local vals = T()
+    local vals = {}
     local i = 1
     for _,v in pairs(t) do
         vals[i] = v
@@ -44,26 +43,11 @@ end
 
 
 function table.invert(t)
-    local i = T()
+    local i = {}
 	for k,v in pairs(t) do 
 		i[v] = k
 	end
 	return i
-end
-
-
-function longest_wstr(tbl)
-    return math.max(unpack(map(string.wlen, tbl)))
-end
-
-
-function longest_str(tbl)
-    return math.max(unpack(map(string.len, tbl)))
-end
-
-
-function longest_key_len(tbl)
-    return longest_str(map(tostring, T(tbl):keys()))
 end
 
 
@@ -84,12 +68,12 @@ local function cmp(obj1, obj2)
 end
 
 
-local function __genOrderedIndex(t)
-    local tbl = T()
-    for key in pairs(t) do
-        tbl:insert(key)
+local function genOrderedIndex(t)
+    local tbl = {}
+    for k,_ in pairs(t) do
+        table.insert(tbl, k)
     end
-    tbl:sort(cmp)
+    table.sort(tbl, cmp)
     return tbl
 end
 
@@ -98,7 +82,7 @@ local function orderedNext(t, state)
     -- Equivalent to the next function, but returns keys in order
     key = nil
     if state == nil then
-        t.__orderedIndex = __genOrderedIndex(t)
+        t.__orderedIndex = genOrderedIndex(t)
         key = t.__orderedIndex[1]
     else
         for i = 1, table.getn(t.__orderedIndex) do

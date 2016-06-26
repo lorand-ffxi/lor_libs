@@ -16,7 +16,7 @@ lor_chat._version = '2016.06.26'
 lor_chat._windower = gearswap and gearswap._G.windower or windower
 
 require('lor/lor_utils')
-_libs.req('maths')
+_libs.req('maths', 'strings', 'tables')
 _libs.lor.req('functional', 'strings', 'tables')
 _libs.lor.chat = lor_chat
 
@@ -29,7 +29,24 @@ function atc(...)
         args = args:slice(2)
     end
     local msg = lor_chat._windower.to_shift_jis(" ":join(args))
+    lor_chat._windower.add_to_chat(c, msg)
+end
+
+
+function atcc(...)
+    local args = T({...})
+    local c = 0
+    if type(args[1]) == 'number' then
+        c = args[1]
+        args = args:slice(2)
+    end
+    local msg = lor_chat._windower.to_shift_jis(" ":join(args))
     lor_chat._windower.add_to_chat(0, msg:colorize(c))
+end
+
+
+function atcs(msg)
+    windower.add_to_chat(0, windower.to_shift_jis(tostring(msg)))
 end
 
 
@@ -40,42 +57,34 @@ function atcd(c, msg)
 end
 
 
+--[[
+    Formatted Add to Chat - The first arg is used as the color if it's numeric.
+    The next argument is used as the format string, and remaining arguments
+    are passed in to be formatted in the string.
+--]]
 function atcf(...)
-    --[[
-        Add To Chat - Formatted
-        If the first argument is numeric, it is used as the color.
-        The next argument is used as the format string, and remaining arguments
-        are passed in to be formatted in the string.
-    --]]
     local args = T({...})
     local c = 0
     if type(args[1]) == 'number' then
         c = args[1]
         args = args:slice(2)
     end
-    local fmt = args[1]
-    args = args:slice(2)
-    atc(c, fmt:format(unpack(args)))
+    atc(c, string.format(args[1], unpack(args:slice(2))))
 end
 
 
+--[[
+    String-Formatted Add to Chat - Works as atcf above, but all args are
+    converted to strings before being passed in to string.format.
+--]]
 function atcfs(...)
-    --[[
-        Add To Chat - Formatted - Safe Strings
-        If the first argument is numeric, it is used as the color.
-        The next argument is used as the format string, and remaining arguments
-        are passed in to be formatted in the string after being converted to
-        strings.
-    --]]
     local args = T({...})
     local c = 0
     if type(args[1]) == 'number' then
         c = args[1]
         args = args:slice(2)
     end
-    local fmt = args[1]
-    args = map(tostring, args:slice(2))
-    atc(c, fmt:format(unpack(args)))
+    atc(c, string.format(args[1], unpack(map(tostring, args:slice(2)))))
 end
 
 
@@ -90,26 +99,24 @@ function echo(msg)
 end
 
 
+--[[
+    Pretty Print the given object, optionally with a header line
+--]]
 function pprint(obj, header)
-    --[[
-        Print all key, value pairs in the given table to the FFXI chat log,
-        with an optional header line
-    --]]
     if obj ~= nil then
         if header ~= nil then
             atc(2, header)
         end
         if type(obj) == 'table' then
             local c = 0
-            local stbl = dmap(tostring, obj)
-            local fmt = '%-'..tostring(longest_wstr(stbl:keys()))..'s  :  %s'
-            
-            for k,v in opairs(stbl) do
-                atc(0, fmt:format(k, v))
-                c = c + 1
-                if ((c % 50) == 0) then
+            local lwkl = max(unpack(map(string.wlen, table.keys(obj))))
+            local fmt = '%-'..tostring(lwkl)..'s  :  %s'
+            for k,v in opairs(obj) do
+                if (c ~= 0) and ((c % 30) == 0) then
                     atc(160,'---------- ('..c..') ----------')
                 end
+                atcfs(fmt, k, v)
+                c = c + 1
             end
         else
             atc(0, tostring(obj))

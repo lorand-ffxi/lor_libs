@@ -8,7 +8,7 @@ lor_str._author = 'Ragnarok.Lorand'
 lor_str._version = '2016.06.26'
 
 require('lor/lor_utils')
-_libs.req('maths')
+_libs.req('strings')
 _libs.lor.req('functional')
 _libs.lor.strings = lor_str
 
@@ -31,11 +31,11 @@ function string.colorize(str, new_col, reset_col)
 end
 
 
+--[[
+    Returns a weighted length for the given string given that FFXI's chat
+    log font is not fixed-width.
+--]]
 function string.wlen(s)
-    --[[
-        Returns a weighted length for the given string given that FFXI's chat
-        log font is not fixed-width.
-    --]]
     local wl = 0
     for c in s:gmatch('.') do
         if c:match('[fijlrt|!*(){}:;\'"\.,\[\]]') then
@@ -44,25 +44,25 @@ function string.wlen(s)
             wl = wl + 1.25
         end
     end
-    return math.round(wl)
+    return math.floor(wl + 0.5)
 end
 
 
 function string.fmts(fmt, ...)
-    local args = T({...})
-    return fmt:format(unpack(map(tostring, args)))
+    local args = {...}
+    return string.format(fmt, unpack(map(tostring, {...})))
 end
 
 
 function string.join(jstr, ...)
     --Somewhat equivalent to Python's str.join(iterable)
-    local tbl = T({...})
+    local tbl = {...}
     local building = ''
     local i = 1
-    while i < #tbl do
+    while i <= #tbl do
         local ele = tbl[i]
         if type(ele) == 'table' then
-            ele = jstr:join(unpack(ele))
+            ele = string.join(jstr, unpack(ele))
         end
         building = building..((i == 1) and '' or jstr)..tostring(ele)
         i = i + 1

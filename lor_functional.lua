@@ -8,8 +8,12 @@ lor_func._author = 'Ragnarok.Lorand'
 lor_func._version = '2016.06.26'
 
 require('lor/lor_utils')
-_libs.req('tables', 'functions')
+_libs.req('functions')
 _libs.lor.functional = lor_func
+
+
+max = math.max
+min = math.min
 
 
 function all_eq(val, ...)
@@ -32,10 +36,10 @@ end
 
 function map(fn, tbl)
     --[[
-        Returns the result of applying function fn to every value in tbl without
-        modifying tbl.
+        Returns the result of applying function fnc to every value in tbl
+        without modifying tbl.
     --]]
-    local rtbl = T()
+    local rtbl = {}
     for k,v in pairs(tbl) do
         rtbl[k] = fn(v)
     end
@@ -45,10 +49,10 @@ end
 
 function kmap(fn, tbl)
     --[[
-        Returns the result of applying function fn to every key in tbl without
+        Returns the result of applying function fnc to every key in tbl without
         modifying tbl.
     --]]
-    local rtbl = T()
+    local rtbl = {}
     for k,v in pairs(tbl) do
         rtbl[fn(k)] = v
     end
@@ -58,10 +62,10 @@ end
 
 function dmap(fn, tbl)
     --[[
-        Returns the result of applying function fn to every key and value in tbl
-        without modifying tbl.  Useful for applying tostring() to both.
+        Returns the result of applying function fnc to every key and value in
+        tbl without modifying tbl.  Useful for applying tostring() to both.
     --]]
-    local rtbl = T()
+    local rtbl = {}
     for k,v in pairs(tbl) do
         rtbl[fn(k)] = fn(v)
     end

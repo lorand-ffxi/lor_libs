@@ -7,20 +7,62 @@
 local lor_utils = {}
 lor_utils._version = '2016.06.26'
 lor_utils._author = 'Ragnarok.Lorand'
+lor_utils.load_order = {'functional','math','strings','tables','chat','exec'}
 
 _libs = _libs or {}
 _libs.lor = _libs.lor or {}
 
 if not _libs.lor.utils then
     _libs.lor.utils = lor_utils
-    _libs.lor.req = function(...)
-        for _,libname in pairs({...}) do
-            _libs.lor[libname] = _libs.lor[libname] or require('lor/lor_'..libname)
+    _libs.strings = _libs.strings or require('strings')
+    
+    function _handler(err)
+        --[[
+            Error handler to print the stack trace of the error.
+            Example use:
+            local fmt = nil
+            local status = xpcall(function() fmt = '%-'..tostring(longest_wstr(stbl:keys()))..'s  :  %s' end, _handler)
+            if status then return nil end
+        --]]
+        local st_re = '([^/]+/[^/]+%.lua:.*)'
+        local tb_str = debug.traceback()
+        local tb = tb_str:split('\n')
+        tb = tb:slice(2)
+        tb = tb:reverse()
+        tb = T({'stack traceback:'}):extend(tb)
+        tb:append(err)
+        for _,tl in pairs(tb) do
+            if (type(tl) == 'string') and (not tl:match('%[C%]: in function \'xpcall\'')) then
+                local trunc_line = tl:match(st_re)
+                if trunc_line then
+                    windower.add_to_chat(167, tostring(trunc_line))
+                else
+                    windower.add_to_chat(167, tostring(tl))
+                end
+            end
         end
     end
+    
+    local function t_contains(t, val)
+        --Used for enforcing the load order without loading the tables library
+        for _,v in pairs(t) do
+            if v == val then return true end
+        end
+        return false
+    end
+    
+    _libs.lor.req = function(...)
+        local args = {...}
+        for _,lname in pairs(lor_utils.load_order) do
+            if t_contains(args, lname) then
+                _libs.lor[lname] = _libs.lor[lname] or require('lor/lor_'..lname)
+            end
+        end
+    end
+    
     _libs.req = function(...)
-        for _,libname in pairs({...}) do
-            _libs[libname] = _libs[libname] or require(libname)
+        for _,lname in pairs({...}) do
+            _libs[lname] = _libs[lname] or require(lname)
         end
     end
 end
