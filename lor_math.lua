@@ -1,77 +1,28 @@
 --[[
-    String functions
+    Math functions
     Author: Ragnarok.Lorand
---]]
+]]
 
-local lor_str = {}
-lor_str._author = 'Ragnarok.Lorand'
-lor_str._version = '2016.06.26'
+local lor_math = {}
+lor_math._author = 'Ragnarok.Lorand'
+lor_math._version = '2016.06.26'
 
 require('lor/lor_utils')
 _libs.req('maths')
-_libs.lor.req('functional')
-_libs.lor.strings = lor_str
+_libs.lor.math = lor_math
 
 
-local function colorFor(col)
-    local cstr = ''
-    if not ((S{256,257}:contains(col)) or (col<1) or (col>511)) then
-        if (col <= 255) then
-            cstr = string.char(0x1F)..string.char(col)
-        else
-            cstr = string.char(0x1E)..string.char(col - 256)
-        end
-    end
-    return cstr
+--[[
+    Rounds a float to the given number of decimal places.
+    Note: math.round is only for rounding to the nearest integer
+--]]
+function roundf(num, dec_places)
+    local mult = 10^(dec_places or 0)
+    return math.floor(num * mult + 0.5) / mult
 end
 
 
-function string.colorize(str, new_col, reset_col)
-    return colorFor(new_col or 1)..str..colorFor(reset_col or 1)
-end
-
-
-function string.wlen(s)
-    --[[
-        Returns a weighted length for the given string given that FFXI's chat
-        log font is not fixed-width.
-    --]]
-    local wl = 0
-    for c in s:gmatch('.') do
-        if c:match('[fijlrt|!*(){}:;\'"\.,\[\]]') then
-            wl = wl + 1.75
-        else
-            wl = wl + 1.25
-        end
-    end
-    return math.round(wl)
-end
-
-
-function string.fmts(fmt, ...)
-    local args = T({...})
-    return fmt:format(unpack(map(tostring, args)))
-end
-
-
-function string.join(jstr, ...)
-    --Somewhat equivalent to Python's str.join(iterable)
-    local tbl = T({...})
-    local building = ''
-    local i = 1
-    while i < #tbl do
-        local ele = tbl[i]
-        if type(ele) == 'table' then
-            ele = jstr:join(unpack(ele))
-        end
-        building = building..((i == 1) and '' or jstr)..tostring(ele)
-        i = i + 1
-    end
-    return building
-end
-
-
-return lor_str
+return lor_math
 
 -----------------------------------------------------------------------------------------------------------
 --[[
