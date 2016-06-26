@@ -1,6 +1,4 @@
----+ Libraries for addons written by Lorand
-
----++ Location
+Libraries for addons written by Lorand
 
 Place these files in:
 
