@@ -46,7 +46,7 @@ end
 
 
 function atcs(msg)
-    windower.add_to_chat(0, windower.to_shift_jis(tostring(msg)))
+    lor_chat._windower.add_to_chat(0, windower.to_shift_jis(tostring(msg)))
 end
 
 
@@ -69,7 +69,12 @@ function atcf(...)
         c = args[1]
         args = args:slice(2)
     end
-    atc(c, string.format(args[1], unpack(args:slice(2))))
+    
+    if #args < 2 then
+        lor_chat._windower.add_to_chat(c, tostring(args[1]))
+    else
+        lor_chat._windower.add_to_chat(c, string.format(args[1], unpack(args:slice(2))))
+    end
 end
 
 
@@ -84,7 +89,12 @@ function atcfs(...)
         c = args[1]
         args = args:slice(2)
     end
-    atc(c, string.format(args[1], unpack(map(tostring, args:slice(2)))))
+    
+    if #args < 2 then
+        lor_chat._windower.add_to_chat(c, tostring(args[1]))
+    else
+        lor_chat._windower.add_to_chat(c, string.format(args[1], unpack(map(tostring, args:slice(2)))))
+    end
 end
 
 
@@ -108,6 +118,10 @@ function pprint(obj, header)
             atc(2, header)
         end
         if type(obj) == 'table' then
+            if sizeof(obj) < 1 then
+                atc('{}')
+                return
+            end
             local c = 0
             local lwkl = max(unpack(map(string.wlen, table.keys(obj))))
             local fmt = '%-'..tostring(lwkl)..'s  :  %s'
@@ -121,6 +135,8 @@ function pprint(obj, header)
         else
             atc(0, tostring(obj))
         end
+    else
+        atc(0, tostring(obj))
     end
 end
 

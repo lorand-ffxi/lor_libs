@@ -16,6 +16,8 @@ if not _libs.lor.utils then
     _libs.lor.utils = lor_utils
     _libs.strings = _libs.strings or require('strings')
     
+    xpcall = gearswap and gearswap._G.xpcall or xpcall
+    
     function _handler(err)
         --[[
             Error handler to print the stack trace of the error.
@@ -43,6 +45,19 @@ if not _libs.lor.utils then
         end
     end
     
+    --[[
+        Wrapper for functions so that calls to them resulting in exceptions will
+        generate stack traces.
+    --]]
+    function traceable(fn)
+        return function(...)
+            local args = {...}
+            local res = nil
+            local status = xpcall(function() res = fn(unpack(args)) end, _handler)
+            return res
+        end
+    end
+    
     local function t_contains(t, val)
         --Used for enforcing the load order without loading the tables library
         for _,v in pairs(t) do
@@ -53,9 +68,15 @@ if not _libs.lor.utils then
     
     _libs.lor.req = function(...)
         local args = {...}
-        for _,lname in pairs(lor_utils.load_order) do
-            if t_contains(args, lname) then
+        if (#args == 1) and (args[1]:lower() == 'all') then
+            for _,lname in pairs(lor_utils.load_order) do
                 _libs.lor[lname] = _libs.lor[lname] or require('lor/lor_'..lname)
+            end
+        else
+            for _,lname in pairs(lor_utils.load_order) do
+                if t_contains(args, lname) then
+                    _libs.lor[lname] = _libs.lor[lname] or require('lor/lor_'..lname)
+                end
             end
         end
     end

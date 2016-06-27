@@ -15,6 +15,45 @@ _libs.lor.functional = lor_func
 max = math.max
 min = math.min
 
+lor = lor or {}
+lor.fn_and = function(a,b) return a and b end
+lor.fn_or = function(a,b) return a or b end
+lor.fn_add = function(a,b) return a + b end
+lor.fn_sub = function(a,b) return a - b end
+lor.fn_mul = function(a,b) return a * b end
+lor.fn_div = function(a,b) return a / b end
+lor.fn_eq = function(a,b) return a == b end
+lor.fn_neq = function(a,b) return a ~= b end
+lor.fn_lt = function(a,b) return a < b end
+lor.fn_gt = function(a,b) return a > b end
+lor.fn_lte = function(a,b) return a <= b end
+lor.fn_gte = function(a,b) return a >= b end
+lor.fn_get = function(t,k) return t[k] end
+lor.fn_in = function(d, k) return d[k] ~= nil end
+
+
+local trace = {}
+
+--[[
+    Returns a customized copy of the given function fn, such that future calls
+    of the returned function will always pass the given value val to fn in
+    position pos, along with any additional arguments provided.
+    Written based on the desire to emulate the 'if' portion of list/dict
+    comprehension in Python, such as in the following:
+    list = [val for key,val in dict.items() if key in equip_bags]
+    Example usage:
+    local equip_bags = player:key_filter(customized(lor.fn_in, equip_bag_names))
+--]]
+function customized(fn, val, pos)
+    local p = pos or 1
+    return function(...)
+        local args = {...}
+        table.insert(args, p, val)
+        return fn(unpack(args))
+        --return fn(val, ...)
+    end
+end
+
 
 function all_eq(val, ...)
     --Returns true iff every argument is equal to val
@@ -34,11 +73,53 @@ function any_eq(val, ...)
 end
 
 
-function map(fn, tbl)
-    --[[
-        Returns the result of applying function fnc to every value in tbl
-        without modifying tbl.
-    --]]
+function trace.reduce(fn, ...)
+    local args = {...}
+    local res = args[1]
+    local i = 2
+    while i <= #args do
+        res = fn(res, args[i])
+        i = i + 1
+    end
+    return res
+end
+
+--[[
+    Returns the first truthy (possibly non-nil) value.  Unpack tables before
+    passing them to this function.
+--]]
+function lazy_or(...)
+    local args = {...}
+    local res = args[1]
+    local i = 2
+    while (i <= #args) and (not res) do
+        res = res or args[i]
+        i = i + 1
+    end
+    return res
+end
+
+
+--[[
+    Unpack tables before passing them to this function.
+--]]
+function lazy_and(...)
+    local args = {...}
+    local res = args[1]
+    local i = 2
+    while (i <= #args) and res do
+        res = res and args[i]
+        i = i + 1
+    end
+    return res
+end
+
+
+--[[
+    Returns the result of applying function fnc to every value in tbl
+    without modifying tbl.
+--]]
+function trace.map(fn, tbl)
     local rtbl = {}
     for k,v in pairs(tbl) do
         rtbl[k] = fn(v)
@@ -47,11 +128,11 @@ function map(fn, tbl)
 end
 
 
-function kmap(fn, tbl)
-    --[[
-        Returns the result of applying function fnc to every key in tbl without
-        modifying tbl.
-    --]]
+--[[
+    Returns the result of applying function fnc to every key in tbl without
+    modifying tbl.
+--]]
+function trace.kmap(fn, tbl)
     local rtbl = {}
     for k,v in pairs(tbl) do
         rtbl[fn(k)] = v
@@ -60,16 +141,22 @@ function kmap(fn, tbl)
 end
 
 
-function dmap(fn, tbl)
-    --[[
-        Returns the result of applying function fnc to every key and value in
-        tbl without modifying tbl.  Useful for applying tostring() to both.
-    --]]
+--[[
+    Returns the result of applying function fnc to every key and value in
+    tbl without modifying tbl.  Useful for applying tostring() to both.
+--]]
+function trace.dmap(fn, tbl)
     local rtbl = {}
     for k,v in pairs(tbl) do
         rtbl[fn(k)] = fn(v)
     end
     return rtbl
+end
+
+
+--Add the traceable versions of the functions marked to be so to the environment
+for fname,fn in pairs(trace) do
+    _G[fname] = traceable(fn)
 end
 
 

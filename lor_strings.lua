@@ -37,8 +37,8 @@ end
 --]]
 function string.wlen(s)
     local wl = 0
-    for c in s:gmatch('.') do
-        if c:match('[fijlrt|!*(){}:;\'"\.,\[\]]') then
+    for c in tostring(s):gmatch('.') do
+        if tostring(c):match('[fijlrt|!*(){}:;\'"\.,\[\]]') then
             wl = wl + 1.75
         else
             wl = wl + 1.25

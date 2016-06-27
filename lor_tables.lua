@@ -20,6 +20,15 @@ function sizeof(tbl)
 end
 
 
+function table.first_value(tbl)
+    if tbl == nil then return nil end
+    if sizeof(tbl) == 0 then return nil end
+    for k,v in pairs(tbl) do
+        return v
+    end
+end
+
+
 function table.keys(t)
     local ktbl = {}
     local i = 1
