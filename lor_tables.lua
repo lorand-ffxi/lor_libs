@@ -53,10 +53,10 @@ end
 
 function table.invert(t)
     local i = {}
-	for k,v in pairs(t) do 
-		i[v] = k
-	end
-	return i
+    for k,v in pairs(t) do 
+        i[v] = k
+    end
+    return i
 end
 
 

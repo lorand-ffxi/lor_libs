@@ -42,7 +42,7 @@ local trace = {}
     comprehension in Python, such as in the following:
     list = [val for key,val in dict.items() if key in equip_bags]
     Example usage:
-    local equip_bags = player:key_filter(customized(lor.fn_in, equip_bag_names))
+    local equip_bags = map(customized(lor.fn_get, player), equip_bag_names)
 --]]
 function customized(fn, val, pos)
     local p = pos or 1
@@ -50,7 +50,6 @@ function customized(fn, val, pos)
         local args = {...}
         table.insert(args, p, val)
         return fn(unpack(args))
-        --return fn(val, ...)
     end
 end
 

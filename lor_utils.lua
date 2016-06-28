@@ -16,7 +16,10 @@ if not _libs.lor.utils then
     _libs.lor.utils = lor_utils
     _libs.strings = _libs.strings or require('strings')
     
-    xpcall = gearswap and gearswap._G.xpcall or xpcall
+    lor = lor or {}
+    lor.G = gearswap and gearswap._G or _G
+    xpcall = lor.G.xpcall
+    lor.watc = lor.G.windower.add_to_chat
     
     function _handler(err)
         --[[
@@ -37,9 +40,9 @@ if not _libs.lor.utils then
             if (type(tl) == 'string') and (not tl:match('%[C%]: in function \'xpcall\'')) then
                 local trunc_line = tl:match(st_re)
                 if trunc_line then
-                    windower.add_to_chat(167, tostring(trunc_line))
+                    lor.watc(167, tostring(trunc_line))
                 else
-                    windower.add_to_chat(167, tostring(tl))
+                    lor.watc(167, tostring(tl))
                 end
             end
         end

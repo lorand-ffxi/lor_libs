@@ -51,9 +51,9 @@ end
 
 
 function atcd(c, msg)
-	if show_debug then
-		atc(c, msg)
-	end
+    if show_debug then
+        atc(c, msg)
+    end
 end
 
 
@@ -99,13 +99,13 @@ end
 
 
 function echo(msg)
-	if (msg ~= nil) then
+    if (msg ~= nil) then
         local prefix = ''
         if _addon and _addon.name then
             prefix = '['.._addon.name..']'
         end
-		windower.send_command('echo %s%s':format(prefix, msg))
-	end
+        windower.send_command('echo %s%s':format(prefix, msg))
+    end
 end
 
 
@@ -137,6 +137,25 @@ function pprint(obj, header)
         end
     else
         atc(0, tostring(obj))
+    end
+end
+
+
+function printTiered(tbl, tab)
+    local sp = tab and tab..'   ' or ''
+    if (tbl ~= nil) and (type(tbl) == 'table') then
+        for k,v in pairs(tbl) do
+            if (type(v) == 'table') then
+                atc('%s%s = {':fmts(sp, k))
+                printTiered(v, sp)
+                atc(sp..'}')
+            else
+                atc('%s%15s: %s':fmts(sp, k, v))
+            end
+        end
+        
+    else
+        atc(0, sp..tostring(tbl))
     end
 end
 
