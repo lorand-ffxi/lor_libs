@@ -5,7 +5,7 @@
 
 local lor_math = {}
 lor_math._author = 'Ragnarok.Lorand'
-lor_math._version = '2016.06.26'
+lor_math._version = '2016.06.28'
 
 require('lor/lor_utils')
 _libs.req('maths')
@@ -19,6 +19,15 @@ _libs.lor.math = lor_math
 function roundf(num, dec_places)
     local mult = 10^(dec_places or 0)
     return math.floor(num * mult + 0.5) / mult
+end
+
+
+function roundup(num)
+    local n = math.floor(num)
+    if n == num then
+        return n
+    end
+    return n + 1
 end
 
 

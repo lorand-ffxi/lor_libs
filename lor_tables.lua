@@ -6,7 +6,7 @@
 
 local lor_tables = {}
 lor_tables._author = 'Ragnarok.Lorand'
-lor_tables._version = '2016.06.26'
+lor_tables._version = '2016.07.01'
 
 require('lor/lor_utils')
 _libs.req('tables')
@@ -17,6 +17,16 @@ function sizeof(tbl)
     local c = 0
     for _,_ in pairs(tbl) do c = c + 1 end
     return c
+end
+
+
+function table.intersects(tbla, tblb)
+    for _,v1 in pairs(tbla) do
+        for _,v2 in pairs(tblb) do
+            if v1 == v2 then return true end
+        end
+    end
+    return false
 end
 
 

@@ -5,12 +5,41 @@
 
 local lor_str = {}
 lor_str._author = 'Ragnarok.Lorand'
-lor_str._version = '2016.06.26'
+lor_str._version = '2016.06.28'
 
 require('lor/lor_utils')
 _libs.req('strings')
-_libs.lor.req('functional')
+_libs.lor.req('functional', 'math')
 _libs.lor.strings = lor_str
+
+
+local char_widths = {
+    [' '] = 7,  ['!'] = 7,  ['"'] = 7,  ['#'] = 10, ['$'] = 8,  ['%'] = 13, 
+    ['&'] = 11, ['('] = 8,  [')'] = 8,  ['*'] = 9,  [','] = 5,  ['.'] = 5,
+    ['/'] = 7,  [':'] = 5,  [';'] = 5,  ['?'] = 9,  ['@'] = 11, ['['] = 8,
+    ['\\'] = 8, ['\''] = 5, ['-'] = 8,  [']'] = 8,  ['^'] = 9,  ['_'] = 9,
+    ['`'] = 7,  ['{'] = 7,  ['|'] = 6,  ['}'] = 7,  ['~'] = 12, ['+'] = 9,
+    ['='] = 9,  ['0'] = 9,  ['1'] = 9,  ['2'] = 9,  ['3'] = 9,  ['4'] = 9,  
+    ['5'] = 9,  ['6'] = 9,  ['7'] = 9,  ['8'] = 9,  ['9'] = 9,  ['A'] = 11,
+    ['a'] = 9,  ['B'] = 11, ['b'] = 9,  ['C'] = 10, ['c'] = 9,  ['D'] = 10,
+    ['d'] = 9,  ['E'] = 10, ['e'] = 9,  ['f'] = 7,  ['F'] = 9,  ['G'] = 11,
+    ['g'] = 9,  ['H'] = 10, ['h'] = 9,  ['i'] = 5,  ['I'] = 6,  ['j'] = 6,
+    ['J'] = 9,  ['K'] = 11, ['k'] = 9,  ['L'] = 10, ['l'] = 5,  ['M'] = 12,
+    ['m'] = 12, ['N'] = 10, ['n'] = 9,  ['o'] = 10, ['O'] = 11, ['P'] = 10,
+    ['p'] = 9,  ['Q'] = 12, ['q'] = 9,  ['R'] = 11, ['r'] = 6,  ['S'] = 10,
+    ['s'] = 8,  ['T'] = 10, ['t'] = 7,  ['U'] = 10, ['u'] = 9,  ['V'] = 11,
+    ['v'] = 9,  ['w'] = 11, ['W'] = 14, ['X'] = 11, ['x'] = 9,  ['Y'] = 11,
+    ['y'] = 9,  ['Z'] = 11, ['z'] = 8
+}
+
+
+local function char_counts(s)
+    local tbl = {}
+    for c in tostring(s):gmatch('.') do
+        tbl[c] = (tbl[c] or 0) + 1
+    end
+    return tbl
+end
 
 
 local function colorFor(col)
@@ -37,14 +66,14 @@ end
 --]]
 function string.wlen(s)
     local wl = 0
-    for c in tostring(s):gmatch('.') do
-        if tostring(c):match('[fijlrt|!*(){}:;\'"\.,\[\]]') then
-            wl = wl + 1.75
-        else
-            wl = wl + 1.25
-        end
+    --for c in tostring(s):gmatch('.') do
+    --    wl = wl + (char_widths[c] or 9)
+    --end
+    for chr, cnt in pairs(char_counts(s)) do
+        wl = wl + ((char_widths[chr] or 9) * cnt)
     end
-    return math.floor(wl + 0.5)
+    return roundup(wl / 7)
+    --return math.floor(wl + 0.5)
 end
 
 

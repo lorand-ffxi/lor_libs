@@ -5,7 +5,7 @@
 
 local lor_chat = {}
 lor_chat._author = 'Ragnarok.Lorand'
-lor_chat._version = '2016.06.26'
+lor_chat._version = '2016.06.28'
 
 
 --[[
@@ -109,6 +109,12 @@ function echo(msg)
 end
 
 
+local function fmt_output(s, w)
+    local sp = ' ':rep(w - tostring(s):wlen())
+    return s..sp
+end
+
+
 --[[
     Pretty Print the given object, optionally with a header line
 --]]
@@ -124,12 +130,12 @@ function pprint(obj, header)
             end
             local c = 0
             local lwkl = max(unpack(map(string.wlen, table.keys(obj))))
-            local fmt = '%-'..tostring(lwkl)..'s  :  %s'
+            local fmt = '%s :  %s'
             for k,v in opairs(obj) do
                 if (c ~= 0) and ((c % 30) == 0) then
                     atc(160,'---------- ('..c..') ----------')
                 end
-                atcfs(fmt, k, v)
+                atcfs(fmt, fmt_output(k, lwkl), v)
                 c = c + 1
             end
         else
