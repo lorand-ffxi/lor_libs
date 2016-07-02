@@ -6,7 +6,7 @@
 
 local lor_exec = {}
 lor_exec._author = 'Ragnarok.Lorand'
-lor_exec._version = '2016.06.26'
+lor_exec._version = '2016.07.02'
 
 require('lor/lor_utils')
 _libs.req('maths', 'strings', 'tables')
@@ -20,47 +20,10 @@ _libs.lor.exec = lor_exec
     given name.
 --]]
 local function parse_for_info(command)
-    if (command:startswith('type')) then
-        local contents = command:sub(6, #command-1)
-        local parsed = parse_for_info(contents)
-        local asNum = tonumber(contents)
-        if (#contents == 0) then
-            contents = nil
-        end
-        local toType = parsed and parsed or (asNum and asNum or contents)
-        return type(toType)
-    end
-    
-    local parts = string.split(command, '.')
-    local result = _G
-    
-    for i = 1, #parts, 1 do
-        if result == nil then return nil end
-        local str = parts[i]
-        if string.endswith(str, '()') then
-            local func = str:sub(1, #str-2)
-            result = result[func]()
-        elseif string.endswith(str, ')') then
-            local params = string.match(str, '%([^)]+%)')
-            params = params:sub(2, #params-1)
-            local func = str:sub(1, string.find(str, '%(')-1)
-            local paramlist = params:split(',')
-            result = result[func](unpack(paramlist))
-        elseif string.endswith(str, ']') then
-            local key = string.match(str, '%[.+%]')
-            key = key:sub(2, #key-1)
-            local tab = str:sub(1, string.find(str, '%[')-1)
-            result = result[tab][key]
-        else
-            local strnum = tonumber(str)
-            if (strnum ~= nil) and (result[strnum] ~= nil) then
-                result = result[strnum]
-            else
-                result = result[str]
-            end
-        end
-    end
-    return result
+    local toload = command:startswith('return ') and command or 'return '..command
+    local loaded = loadstring(toload)
+    lor.G.setfenv(loaded, _G)
+    return loaded()
 end
 
 
@@ -111,11 +74,13 @@ function lor_exec.process_input(command, args)
         end
     else
         if (args ~= nil) and (sizeof(args) > 0) then
-            command = command..table.concat(args, ' ')
+            local sargs = table.concat(args, ' ')
+            local joiner = (#sargs > 0) and ' ' or ''
+            command = command..joiner..sargs
+            atc(command)
         end
         local parsed = parse_for_info(command)
-        -- atc(0,'Loading string: '..command)
-        -- local parsed = loadstring(command)()
+        
         if parsed ~= nil then
             local msg = ':'
             if (type(parsed) == 'table') then
@@ -124,8 +89,6 @@ function lor_exec.process_input(command, args)
             pprint(parsed, command..msg)
         else
             atc(3,'Error: Unable to parse valid command from "'..command..'"')
-            --pprint(args, 'Args Provided')
-            --atc(4,'|'..command..'|')
         end
     end
 end
