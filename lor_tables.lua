@@ -6,7 +6,7 @@
 
 local lor_tables = {}
 lor_tables._author = 'Ragnarok.Lorand'
-lor_tables._version = '2016.07.01'
+lor_tables._version = '2016.07.03'
 
 require('lor/lor_utils')
 _libs.req('tables')
@@ -30,12 +30,29 @@ function table.intersects(tbla, tblb)
 end
 
 
-function table.first_value(tbl)
-    if tbl == nil then return nil end
-    if sizeof(tbl) == 0 then return nil end
-    for k,v in pairs(tbl) do
-        return v
+function table.val_for_first_valid_key(tbl, keys)
+    for _,key in pairs(keys) do
+        if tbl[key] then return tbl[key] end
     end
+    return nil
+end
+
+
+function table.first_key(tbl)
+    if (type(tbl) ~= 'table') or (sizeof(tbl) == 0) then return nil end
+    for k,v in pairs(tbl) do return k end
+end
+
+
+function table.first_value(tbl)
+    if (type(tbl) ~= 'table') or (sizeof(tbl) == 0) then return nil end
+    for k,v in pairs(tbl) do return v end
+end
+
+
+function table.first_pair(tbl)
+    if (type(tbl) ~= 'table') or (sizeof(tbl) == 0) then return nil, nil end
+    for k,v in pairs(tbl) do return k,v end
 end
 
 
@@ -67,6 +84,60 @@ function table.invert(t)
         i[v] = k
     end
     return i
+end
+
+
+function table.expanded_invert(t)
+    local i = {}
+    for k,v in pairs(t) do
+        if type(v) == 'table' then
+            for _,sv in pairs(v) do
+                i[sv] = k
+            end
+        else
+            i[v] = k
+        end
+    end
+    return i
+end
+
+
+function table.has_nested(t)
+    for k,v in pairs(t) do
+        if any_eq(type(v), 'table', 'function') then
+            return true
+        end
+    end
+    return false
+end
+
+
+function table.is_array(t)
+    if type(t) ~= 'table' then return false end
+    for k,v in pairs(t) do
+        if (type(k) ~= 'number') or (not ((1 <= k) and (k <= #t))) then
+            return false
+        end
+    end
+    return true
+end
+
+
+function table.kv_strings(t)
+    local tbl = {}
+    for k,v in opairs(t) do
+        local skey = (type(k) == 'string') and "'"..k.."'" or tostring(k)
+        local sval
+        if type(v) == 'string' then
+            sval = string.find(v, "'") and '"'..v..'"' or "'"..v.."'"
+        elseif (type(v) == 'table') and (sizeof(v) == 0) then
+            sval = '{}'
+        else
+            sval = tostring(v)
+        end
+        table.insert(tbl, skey..': '..sval)
+    end
+    return tbl
 end
 
 

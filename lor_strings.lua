@@ -63,6 +63,7 @@ end
 --[[
     Returns a weighted length for the given string given that FFXI's chat
     log font is not fixed-width.
+    Max weighted line width after timestamp is about 192 at 1600x900 game window
 --]]
 function string.wlen(s)
     local wl = 0

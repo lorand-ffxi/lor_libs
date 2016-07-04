@@ -5,7 +5,7 @@
 
 local lor_func = {}
 lor_func._author = 'Ragnarok.Lorand'
-lor_func._version = '2016.06.26'
+lor_func._version = '2016.07.03'
 
 require('lor/lor_utils')
 _libs.req('functions')
@@ -29,7 +29,11 @@ lor.fn_gt = function(a,b) return a > b end
 lor.fn_lte = function(a,b) return a <= b end
 lor.fn_gte = function(a,b) return a >= b end
 lor.fn_get = function(t,k) return t[k] end
-lor.fn_in = function(d, k) return d[k] ~= nil end
+lor.fn_in = function(d,k) return d[k] ~= nil end
+lor.fn_keqv = function(d,k) return d[k] == k end
+lor.fn_knev = function(d,k) return d[k] ~= k end
+lor.fn_true = function() return true end
+lor.fn_false = function() return false end
 
 
 local trace = {}
@@ -150,6 +154,60 @@ function trace.dmap(fn, tbl)
         rtbl[fn(k)] = fn(v)
     end
     return rtbl
+end
+
+
+--[[
+    Interprets the given string to perform list comprehension using the given
+    content.
+    Acceptable format: 'output_key:output_val for k,v in table if condition'
+--]]
+function comp(comp_str, locals)
+    local f_start,f_end = comp_str:find(' for ')
+    local outputs = comp_str:sub(1,f_start):trim()
+    local _outs = outputs:psplit('[:,]')
+    local ok,ov = _outs[1],_outs[2]
+    comp_str = comp_str:sub(f_end)
+    local in_start,in_end = comp_str:find(' in ')
+    local vars = comp_str:sub(1,in_start):trim()
+    local _vars = vars:split(',')
+    local vk,vv = _vars[1],_vars[2]
+    comp_str = comp_str:sub(in_end)
+    local t_start,t_end = comp_str:mfind('if|where')
+    local input, predicate
+    if t_start then
+        input = comp_str:sub(1,t_start-1):trim()
+        predicate = comp_str:sub(t_end+1):trim()
+    else
+        input = comp_str
+    end
+    local p_start,p_end = input:find('pairs%(')
+    if p_start then
+        input = input:sub(p_end+1,#input-1)
+    end
+    if ov == nil then
+        ov = ok
+        ok = '#_rtbl+1'
+    end
+    local cmd_lines = {
+        'local _rtbl = {}\n',
+        string.format('for %s,%s in pairs(%s) do\n',vk,vv,input),
+        string.format('    if (%s) then\n',predicate or 'true'),
+        string.format('        _rtbl[%s] = %s\n',ok,ov),
+        '    end\nend\nreturn _rtbl'
+    }
+    local cmd = ''
+    for _,l in pairs(cmd_lines) do
+        cmd = cmd..l
+    end
+    local loaded = loadstring(cmd)
+    local fenv = _G
+    locals = locals or {}
+    for k,v in pairs(locals) do
+        fenv[k] = v
+    end
+    lor.G.setfenv(loaded, fenv)
+    return loaded()
 end
 
 

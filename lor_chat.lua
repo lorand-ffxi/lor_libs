@@ -5,15 +5,7 @@
 
 local lor_chat = {}
 lor_chat._author = 'Ragnarok.Lorand'
-lor_chat._version = '2016.06.28'
-
-
---[[
-    If loaded from GearSwap, use the true windower methods instead of the ones
-    overwritten by GearSwap.  Some issues and crashes were experienced while
-    using the overwritten methods.
---]]
-lor_chat._windower = gearswap and gearswap._G.windower or windower
+lor_chat._version = '2016.07.03'
 
 require('lor/lor_utils')
 _libs.req('maths', 'strings', 'tables')
@@ -28,8 +20,8 @@ function atc(...)
         c = args[1]
         args = args:slice(2)
     end
-    local msg = lor_chat._windower.to_shift_jis(" ":join(args))
-    lor_chat._windower.add_to_chat(c, msg)
+    local msg = lor.G.windower.to_shift_jis(" ":join(args))
+    lor.G.windower.add_to_chat(c, msg)
 end
 
 
@@ -40,13 +32,13 @@ function atcc(...)
         c = args[1]
         args = args:slice(2)
     end
-    local msg = lor_chat._windower.to_shift_jis(" ":join(args))
-    lor_chat._windower.add_to_chat(0, msg:colorize(c))
+    local msg = lor.G.windower.to_shift_jis(" ":join(args))
+    lor.G.windower.add_to_chat(0, msg:colorize(c))
 end
 
 
 function atcs(msg)
-    lor_chat._windower.add_to_chat(0, windower.to_shift_jis(tostring(msg)))
+    lor.G.windower.add_to_chat(0, windower.to_shift_jis(tostring(msg)))
 end
 
 
@@ -70,11 +62,15 @@ function atcf(...)
         args = args:slice(2)
     end
     
+    --local msg = (#args < 2) and tostring(args[1]) or args[1]:format(unpack(args:slice(2)))
+    local msg
     if #args < 2 then
-        lor_chat._windower.add_to_chat(c, tostring(args[1]))
+        msg = tostring(args[1])
     else
-        lor_chat._windower.add_to_chat(c, string.format(args[1], unpack(args:slice(2))))
+        msg = args[1]:format(unpack(args:slice(2)))
+        --lor.G.windower.add_to_chat(c, string.format(args[1], unpack(args:slice(2))))
     end
+    lor.G.windower.add_to_chat(c, lor.G.windower.to_shift_jis(msg))
 end
 
 
@@ -90,11 +86,14 @@ function atcfs(...)
         args = args:slice(2)
     end
     
+    local msg
     if #args < 2 then
-        lor_chat._windower.add_to_chat(c, tostring(args[1]))
+        msg = tostring(args[1])
     else
-        lor_chat._windower.add_to_chat(c, string.format(args[1], unpack(map(tostring, args:slice(2)))))
+        --lor.G.windower.add_to_chat(c, string.format(args[1], unpack(map(tostring, args:slice(2)))))
+        msg = args[1]:format(unpack(map(tostring, args:slice(2))))
     end
+    lor.G.windower.add_to_chat(c, lor.G.windower.to_shift_jis(msg))
 end
 
 
@@ -118,7 +117,7 @@ end
 --[[
     Pretty Print the given object, optionally with a header line
 --]]
-function pprint(obj, header)
+function _pprint(obj, header)
     if obj ~= nil then
         if header ~= nil then
             atc(2, header)
@@ -147,24 +146,115 @@ function pprint(obj, header)
 end
 
 
-function printTiered(tbl, tab)
-    local sp = tab and tab..'   ' or ''
-    if (tbl ~= nil) and (type(tbl) == 'table') then
-        for k,v in pairs(tbl) do
-            if (type(v) == 'table') then
-                atc('%s%s = {':fmts(sp, k))
-                printTiered(v, sp)
-                atc(sp..'}')
-            else
-                atc('%s%15s: %s':fmts(sp, k, v))
-            end
+local function print_indented_array(arr, indent)
+    indent = (type(indent) == 'string') and indent or ' ':rep(indent)
+    --local indented = {}
+    local tbl = table.copy(arr)
+    table.sort(tbl)
+    local tmp, i = indent, 0
+    for k,v in ipairs(map(tostring, tbl)) do
+        if (i > 0) and (#tmp + #v) > 190 then
+            --table.insert(indented, tmp)
+            atc(0, tmp)
+            tmp, i = indent, 0
         end
-        
+        if i > 0 then tmp = tmp..' ' end
+        tmp = tmp..v
+        if k < #tbl then tmp = tmp..',' end
+        i = i + 1
+    end
+    --table.insert(indented, tmp)
+    --return indented
+end
+
+
+function pprint_tiered(obj, header, lead_width, depth)
+    if header ~= nil then
+        atc(2, header)
+    end
+    if lor.G.rawequal(obj, _G) then
+        _pprint(obj)
+        return
+    end
+
+    local default_depth = 3
+    depth = depth and (depth - 1) or default_depth
+    lead_width = lead_width and (lead_width + 6) or 0
+    local indent = ' ':rep(lead_width)
+    if obj ~= nil then
+        if type(obj) == 'table' then
+            local lwkl = max(unpack(map(string.wlen, table.keys(obj))))
+            local fmt = indent..'%s :  %s'
+            for k,v in opairs(obj) do
+                if not lor.G.rawequal(obj, v) then   --Skip _G._G
+                    local fk = fmt_output(k, lwkl)
+                    if type(v) == 'table' then
+                        if depth > 1 then
+                            if table.has_nested(v) then
+                                local k1,v1 = table.first_pair(v)
+                                if (sizeof(v) == 1) and (type(v1) == 'table') and (sizeof(v1) == 0) then
+                                    atcfs(0, fmt, fk, '{%s}':format(', ':join(table.kv_strings(v))))
+                                else
+                                    atcfs(0, fmt, fk, '{')
+                                    pprint_tiered(v, nil, lead_width + lwkl, depth)
+                                    atc(0, indent, ' ':rep(lwkl-1), '}')
+                                end
+                            elseif table.is_array(v) then
+                                local arrstr = '{%s}':format(', ':join(v))
+                                arrstr = fmt:format(fk, arrstr)
+                                if arrstr:wlen() > 190 then
+                                    atcfs(0, fmt, fk, '{')
+                                    print_indented_array(v, lead_width + lwkl)
+                                    atc(0, indent, ' ':rep(lwkl-1), '}')
+                                else
+                                    atc(0, arrstr)
+                                end
+                            else
+                                local kvstr = '{%s}':format(', ':join(table.kv_strings(v)))
+                                kvstr = fmt:format(fk, kvstr)
+                                if kvstr:wlen() > 190 then
+                                    atcfs(0, fmt, fk, '{')
+                                    pprint_tiered(v, nil, lead_width + lwkl, depth)
+                                    atc(0, indent, ' ':rep(lwkl-1), '}')
+                                else
+                                    atc(0, kvstr)
+                                end
+                            end
+                        else
+                            if table.is_array(v) then
+                                local arrstr = '{%s}':format(', ':join(v))
+                                arrstr = fmt:format(fk, arrstr)
+                                if arrstr:wlen() > 190 then
+                                    atcfs(0, fmt, fk, '{')
+                                    print_indented_array(v, lead_width + lwkl)
+                                    atc(0, indent, ' ':rep(lwkl-1), '}')
+                                else
+                                    atc(0, arrstr)
+                                end
+                            else
+                                local kvstr = '{%s}':format(', ':join(table.kv_strings(v)))
+                                kvstr = fmt:format(fk, kvstr)
+                                if kvstr:wlen() > 190 then
+                                    atcfs(0, fmt, fk, v)
+                                else
+                                    atc(0, kvstr)
+                                end
+                            end
+                        end
+                    else
+                        atcfs(0, fmt, fk, v)
+                    end
+                end
+            end
+        else
+            atc(0, indent..tostring(obj))
+        end
     else
-        atc(0, sp..tostring(tbl))
+        atc(0, indent..tostring(obj))
     end
 end
 
+pprint = _pprint
 
 return lor_chat
 
