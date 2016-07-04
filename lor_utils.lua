@@ -5,7 +5,7 @@
 --]]
 
 local lor_utils = {}
-lor_utils._version = '2016.06.26'
+lor_utils._version = '2016.07.04'
 lor_utils._author = 'Ragnarok.Lorand'
 lor_utils.load_order = {'functional','math','strings','tables','chat','exec'}
 
@@ -89,6 +89,8 @@ if not _libs.lor.utils then
             _libs[lname] = _libs[lname] or require(lname)
         end
     end
+    
+    lor.G.collectgarbage()
 end
 
 

@@ -5,7 +5,7 @@
 
 local lor_str = {}
 lor_str._author = 'Ragnarok.Lorand'
-lor_str._version = '2016.06.28'
+lor_str._version = '2016.07.04'
 
 require('lor/lor_utils')
 _libs.req('strings')
@@ -78,11 +78,12 @@ function string.wlen(s)
 end
 
 
+--local function _fmts(fmt, ...)
 function string.fmts(fmt, ...)
-    local args = {...}
+    --local args = {...}
     return string.format(fmt, unpack(map(tostring, {...})))
 end
-
+--string.fmts = traceable(_fmts)
 
 function string.join(jstr, ...)
     --Somewhat equivalent to Python's str.join(iterable)

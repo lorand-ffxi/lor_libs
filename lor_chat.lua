@@ -97,6 +97,29 @@ function atcfs(...)
 end
 
 
+--[[
+    String-Formatted Add to Chat, No Shift
+    Does not run text through windower.to_shift_jis() before printing
+--]]
+function atcns(...)
+    local args = T({...})
+    local c = 0
+    if type(args[1]) == 'number' then
+        c = args[1]
+        args = args:slice(2)
+    end
+    
+    local msg
+    if #args < 2 then
+        msg = tostring(args[1])
+    else
+        --lor.G.windower.add_to_chat(c, string.format(args[1], unpack(map(tostring, args:slice(2)))))
+        msg = args[1]:format(unpack(map(tostring, args:slice(2))))
+    end
+    lor.G.windower.add_to_chat(c, msg)
+end
+
+
 function echo(msg)
     if (msg ~= nil) then
         local prefix = ''
