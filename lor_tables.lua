@@ -6,11 +6,108 @@
 
 local lor_tables = {}
 lor_tables._author = 'Ragnarok.Lorand'
-lor_tables._version = '2016.07.03'
+lor_tables._version = '2016.07.17'
 
 require('lor/lor_utils')
 _libs.req('tables')
+_libs.lor.req('functional')
 _libs.lor.tables = lor_tables
+
+
+--Prepare LT in a OO manner such that LT has class properties and methods
+LT = {__class = 'LorTable'}
+LT.__init = function(_,t)   --1st arg to __call() is the table used to call it, i.e., LT
+    local r = t or {}
+    local m = getmetatable(r)
+    if m == nil then
+        m = {}
+        setmetatable(r, m)
+    end
+    if m.__class ~= LT.__class then
+        m.__index = function(t, i)
+            if t ~= table then
+                if table[i] then
+                    return table[i]
+                elseif isnum(i) then
+                    if i < 0 then
+                        return rawget(t, #t+i+1)
+                    end
+                end
+            end
+            return rawget(t, i)
+        end
+        m.__add = table.add
+        m.__class = LT.__class
+    end
+    return r
+end
+LT.__meta = {__call = LT.__init}    --Use LT() as a constructor for LT objects
+setmetatable(LT, LT.__meta)
+
+
+function table.getval(t, i)
+    if t ~= table then
+        if table[i] then
+            return table[i]
+        elseif isnum(i) then
+            if i < 0 then
+                return rawget(t, #t+i+1)
+            end
+        end
+    end
+    return rawget(t, i)
+end
+
+
+function table.add(t, o)
+    local r = {}
+    if table.is_array(t) and table.is_array(t) then
+        for _,v in ipairs(t) do r[#r+1] = v end
+        for _,v in ipairs(o) do r[#r+1] = v end
+    else
+        for k,v in pairs(t) do r[k] = v end
+        for k,v in pairs(o) do r[k] = v end
+    end
+    return r
+end
+
+
+--[[
+    Merges table t with table o; values with the same key from o will overwrite
+    values from t.  Optionally filters keys or values using functions or tables.
+    If a provided filter is a table instead of function, it is converted into a
+    function.  Only k:v pairs where kf(k) and vf(v) are truthy are included in
+    the results.
+--]]
+function table.merge(t, o, kf, vf)
+    local r = {}
+    kf = kf and (isfunc(kf) and kf or lor.fn_tget(kf)) or lor.fn_true
+    vf = vf and (isfunc(vf) and vf or lor.fn_tget(vf)) or lor.fn_true
+    for k,v in pairs(t) do if kf(k) and vf(v) then r[k] = v end end
+    for k,v in pairs(o) do if kf(k) and vf(v) then r[k] = v end end
+    return r
+end
+
+
+function table.keys(t)
+    local r = {}
+    for k,_ in pairs(t) do r[#r+1] = k end
+    return r
+end
+
+function table.strkeys(t)
+    local r = {}
+    for k,_ in pairs(t) do r[#r+1] = tostring(k) end
+    return r
+end
+
+function table.keylens(t)
+    return map(len, table.strkeys(t))
+end
+
+function table.size(t)
+    return #table.keys(t)
+end
 
 
 function sizeof(tbl)
@@ -56,49 +153,36 @@ function table.first_pair(tbl)
 end
 
 
-function table.keys(t)
-    local ktbl = {}
-    local i = 1
-    for k,_ in pairs(t) do
-        ktbl[i] = k
-        i = i + 1
-    end
-    return ktbl
-end
-
-
 function table.values(t)
-    local vals = {}
-    local i = 1
+    local r = {}
     for _,v in pairs(t) do
-        vals[i] = v
-        i = i + 1
+        r[#r+1] = v
     end
-    return vals
+    return r
 end
 
 
 function table.invert(t)
-    local i = {}
+    local r = {}
     for k,v in pairs(t) do 
-        i[v] = k
+        r[v] = k
     end
-    return i
+    return r
 end
 
 
 function table.expanded_invert(t)
-    local i = {}
+    local r = {}
     for k,v in pairs(t) do
         if type(v) == 'table' then
             for _,sv in pairs(v) do
-                i[sv] = k
+                r[sv] = k
             end
         else
-            i[v] = k
+            r[v] = k
         end
     end
-    return i
+    return r
 end
 
 
@@ -123,22 +207,29 @@ function table.is_array(t)
 end
 
 
+local function sesc(v)
+    return isstr(v) and (v:find("'") and '"'..v..'"' or "'"..v.."'") or tostring(v)
+end
+
+
 function table.kv_strings(t)
-    local tbl = {}
+    local r = {}
     for k,v in opairs(t) do
-        local skey = (type(k) == 'string') and "'"..k.."'" or tostring(k)
+        local skey = sesc(k)
         local sval
         if type(v) == 'string' then
-            sval = string.find(v, "'") and '"'..v..'"' or "'"..v.."'"
+            sval = sesc(v)
         elseif (type(v) == 'table') and (sizeof(v) == 0) then
             sval = '{}'
         else
             sval = tostring(v)
         end
-        table.insert(tbl, skey..': '..sval)
+        r[#r+1] = '%s: %s':format(skey, sval)
     end
-    return tbl
+    return r
 end
+
+function table.str(t) return '{%s}':format(', ':join(map(tostring, t))) end
 
 
 local function cmp(obj1, obj2)
@@ -157,42 +248,27 @@ local function cmp(obj1, obj2)
     end
 end
 
-
-local function genOrderedIndex(t)
-    local tbl = {}
-    for k,_ in pairs(t) do
-        table.insert(tbl, k)
+local function ordered_indices(t) local r = table.keys(t); table.sort(r, cmp); return r end
+local function onext(t, state)
+    local m = getmetatable(t)
+    if m == nil then
+        m = {}
+        setmetatable(t, m)
     end
-    table.sort(tbl, cmp)
-    return tbl
-end
-
-
-local function orderedNext(t, state)
-    -- Equivalent to the next function, but returns keys in order
-    key = nil
     if state == nil then
-        t.__orderedIndex = genOrderedIndex(t)
-        key = t.__orderedIndex[1]
+        m.__ordIt = ordered_indices(t)
+        m.__ordIc = 1
     else
-        for i = 1, table.getn(t.__orderedIndex) do
-            if t.__orderedIndex[i] == state then
-                key = t.__orderedIndex[i+1]
-            end
-        end
+        m.__ordIc = m.__ordIc + 1
     end
-    
-    if key then
-        return key, t[key]
+    if m.__ordIc <= #m.__ordIt then
+        local k = m.__ordIt[m.__ordIc]
+        return k, t[k]
     end
-    t.__orderedIndex = nil
-    return
+    m.__ordIt = nil
+    m.__ordIc = nil
 end
-
-
-function opairs(t)
-    return orderedNext, t, nil
-end
+opairs = function(t) return onext, t, nil end
 
 
 return lor_tables

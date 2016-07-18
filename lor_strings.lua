@@ -5,7 +5,7 @@
 
 local lor_str = {}
 lor_str._author = 'Ragnarok.Lorand'
-lor_str._version = '2016.07.04'
+lor_str._version = '2016.07.17'
 
 require('lor/lor_utils')
 _libs.req('strings')
@@ -31,6 +31,21 @@ local char_widths = {
     ['v'] = 9,  ['w'] = 11, ['W'] = 14, ['X'] = 11, ['x'] = 9,  ['Y'] = 11,
     ['y'] = 9,  ['Z'] = 11, ['z'] = 8
 }
+
+
+function string.findall(s, p)
+    local r = {}
+    local i = 1
+    while i <= #s do
+        local a,b = s:find(p,i)
+        if a then
+            r[#r+1] = {a,b}
+            i = a
+        end
+        i = i + 1
+    end
+    return r
+end
 
 
 local function char_counts(s)

@@ -5,7 +5,7 @@
 --]]
 
 local lor_utils = {}
-lor_utils._version = '2016.07.04'
+lor_utils._version = '2016.07.17'
 lor_utils._author = 'Ragnarok.Lorand'
 lor_utils.load_order = {'functional','math','strings','tables','chat','exec'}
 
@@ -88,6 +88,20 @@ if not _libs.lor.utils then
         for _,lname in pairs({...}) do
             _libs[lname] = _libs[lname] or require(lname)
         end
+    end
+    
+    function isfunc(obj) return type(obj) == 'function' end
+    function isstr(obj) return type(obj) == 'string' end
+    function istable(obj) return type(obj) == 'table' end
+    function isnum(obj) return type(obj) == 'number' end
+    function isbool(obj) return type(obj) == 'boolean' end
+    function isnil(obj) return type(obj) == 'nil' end
+    function isuserdata(obj) return type(obj) == 'userdata' end
+    function isthread(obj) return type(obj) == 'thread' end
+    
+    function class(obj)
+        local m = getmetatable(obj)
+        return m and m.__class or type(obj)
     end
     
     lor.G.collectgarbage()

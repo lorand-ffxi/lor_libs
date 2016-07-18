@@ -5,7 +5,7 @@
 
 local lor_chat = {}
 lor_chat._author = 'Ragnarok.Lorand'
-lor_chat._version = '2016.07.03'
+lor_chat._version = '2016.07.17'
 
 require('lor/lor_utils')
 _libs.req('maths', 'strings', 'tables')
@@ -151,14 +151,23 @@ function _pprint(obj, header)
                 return
             end
             local c = 0
-            local lwkl = max(unpack(map(string.wlen, table.keys(obj))))
-            local fmt = '%s :  %s'
+            local fmt = '%%-%ss :  %%s':format(max(unpack(map(string.wlen, table.keys(obj)))))
             for k,v in opairs(obj) do
-                if (c ~= 0) and ((c % 30) == 0) then
-                    atc(160,'---------- ('..c..') ----------')
+                if v ~= obj then
+                    if (c ~= 0) and ((c % 30) == 0) then
+                        atc(160,'---------- ('..c..') ----------')
+                    end
+                    if istable(v) then
+                        if table.is_array(v) then
+                            atcfs(fmt, k, table.str(v))
+                        else
+                            atcfs(fmt, k, table.str(table.kv_strings(v)))
+                        end
+                    else
+                        atcfs(fmt, k, v)
+                    end
+                    c = c + 1
                 end
-                atcfs(fmt, fmt_output(k, lwkl), v)
-                c = c + 1
             end
         else
             atc(0, tostring(obj))

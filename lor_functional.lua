@@ -5,7 +5,7 @@
 
 local lor_func = {}
 lor_func._author = 'Ragnarok.Lorand'
-lor_func._version = '2016.07.03'
+lor_func._version = '2016.07.17'
 
 require('lor/lor_utils')
 _libs.req('functions')
@@ -32,8 +32,10 @@ lor.fn_get = function(t,k) return t[k] end
 lor.fn_in = function(d,k) return d[k] ~= nil end
 lor.fn_keqv = function(d,k) return d[k] == k end
 lor.fn_knev = function(d,k) return d[k] ~= k end
-lor.fn_true = function() return true end
-lor.fn_false = function() return false end
+lor.fn_true = function(...) return true end
+lor.fn_false = function(...) return false end
+
+lor.fn_tget = function(t) return function(k) return t[k] end end
 
 
 local trace = {}
