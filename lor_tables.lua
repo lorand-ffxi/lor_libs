@@ -61,7 +61,7 @@ end
 
 function table.add(t, o)
     local r = {}
-    if table.is_array(t) and table.is_array(t) then
+    if table.is_array(t) and table.is_array(o) then
         for _,v in ipairs(t) do r[#r+1] = v end
         for _,v in ipairs(o) do r[#r+1] = v end
     else
