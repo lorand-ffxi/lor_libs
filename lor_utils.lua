@@ -5,7 +5,7 @@
 --]]
 
 local lor_utils = {}
-lor_utils._version = '2016.07.17'
+lor_utils._version = '2016.07.24'
 lor_utils._author = 'Ragnarok.Lorand'
 lor_utils.load_order = {'functional','math','strings','tables','chat','exec'}
 
@@ -68,17 +68,56 @@ if not _libs.lor.utils then
         end
         return false
     end
+        
+    function yyyymmdd_to_num(date_str)
+        local y,m,d,o = date_str:match('^(%d%d%d%d)[^0-9]*(%d%d)[^0-9]*(%d%d)[^0-9]*(.*)')
+        local x = (#o > 0) and (tonumber(o) or 1) or 0
+        return os.time({year=y,month=m,day=d}) + x
+    end
     
+    function isfunc(obj) return type(obj) == 'function' end
+    function isstr(obj) return type(obj) == 'string' end
+    function istable(obj) return type(obj) == 'table' end
+    function isnum(obj) return type(obj) == 'number' end
+    function isbool(obj) return type(obj) == 'boolean' end
+    function isnil(obj) return type(obj) == 'nil' end
+    function isuserdata(obj) return type(obj) == 'userdata' end
+    function isthread(obj) return type(obj) == 'thread' end
+    function class(obj)
+        local m = getmetatable(obj)
+        return m and m.__class or type(obj)
+    end
+    
+    local function load_lor_lib(lname, version)
+        _libs.lor[lname] = _libs.lor[lname] or require('lor/lor_'..lname)
+        local lib_version = _libs.lor[lname]._version
+        local req_version = version and isstr(version) and yyyymmdd_to_num(version) or 0
+        if req_version > yyyymmdd_to_num(lib_version) then
+            error('lor_%s version %s < %s (required) - Please update from https://github.com/lorand-ffxi/lor_libs':format(lname, lib_version, version))
+        end
+    end
+    
+    --[[
+        Loads the given libs/lor lib or list of libs, optionally requiring a
+        specific version.  It is possible to load all, and specify the version
+        for particular libs.
+    --]]
     _libs.lor.req = function(...)
         local args = {...}
-        if (#args == 1) and (args[1]:lower() == 'all') then
+        local targs = {}
+        for _,arg in pairs(args) do
+            local targ = istable(arg) and arg or {n=arg,v=0}
+            targs[targ.n:lower()] = targ.v
+        end
+        
+        if targs['all'] ~= nil then
             for _,lname in pairs(lor_utils.load_order) do
-                _libs.lor[lname] = _libs.lor[lname] or require('lor/lor_'..lname)
+                load_lor_lib(lname, targs[lname])
             end
         else
             for _,lname in pairs(lor_utils.load_order) do
-                if t_contains(args, lname) then
-                    _libs.lor[lname] = _libs.lor[lname] or require('lor/lor_'..lname)
+                if targs[lname] ~= nil then
+                    load_lor_lib(lname, targs[lname])
                 end
             end
         end
@@ -90,23 +129,8 @@ if not _libs.lor.utils then
         end
     end
     
-    function isfunc(obj) return type(obj) == 'function' end
-    function isstr(obj) return type(obj) == 'string' end
-    function istable(obj) return type(obj) == 'table' end
-    function isnum(obj) return type(obj) == 'number' end
-    function isbool(obj) return type(obj) == 'boolean' end
-    function isnil(obj) return type(obj) == 'nil' end
-    function isuserdata(obj) return type(obj) == 'userdata' end
-    function isthread(obj) return type(obj) == 'thread' end
-    
-    function class(obj)
-        local m = getmetatable(obj)
-        return m and m.__class or type(obj)
-    end
-    
     lor.G.collectgarbage()
 end
-
 
 return lor_utils
 

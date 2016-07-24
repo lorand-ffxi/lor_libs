@@ -6,7 +6,7 @@
 
 local lor_tables = {}
 lor_tables._author = 'Ragnarok.Lorand'
-lor_tables._version = '2016.07.17'
+lor_tables._version = '2016.07.24.0'
 
 require('lor/lor_utils')
 _libs.req('tables')
@@ -86,6 +86,24 @@ function table.merge(t, o, kf, vf)
     for k,v in pairs(t) do if kf(k) and vf(v) then r[k] = v end end
     for k,v in pairs(o) do if kf(k) and vf(v) then r[k] = v end end
     return r
+end
+
+
+--[[
+    Set the value for fields in table t to the value from the field in table o
+    if there is not already a value for that field in table t.
+    Equivalent to a chain of `t[field] = t[field] or o[field]` lines.
+--]]
+function table.update_if_not_set(t, o)
+    for k,v in pairs(o) do
+        if istable(v) then
+            t[k] = t[k] or {}
+            table.update_if_not_set(t[k], o[k])
+        else
+            t[k] = t[k] or v
+        end
+    end
+    return t
 end
 
 
@@ -230,6 +248,18 @@ function table.kv_strings(t)
 end
 
 function table.str(t) return '{%s}':format(', ':join(map(tostring, t))) end
+
+
+function table.has_nested_key(t, ...)
+    if t == nil then return false end
+    local nested = {...}
+    local sub_t = t
+    for _,k in pairs(nested) do
+        sub_t = sub_t[k]
+        if sub_t == nil then return false end
+    end
+    return true
+end
 
 
 local function cmp(obj1, obj2)

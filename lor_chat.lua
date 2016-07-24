@@ -5,12 +5,14 @@
 
 local lor_chat = {}
 lor_chat._author = 'Ragnarok.Lorand'
-lor_chat._version = '2016.07.17'
+lor_chat._version = '2016.07.24.0'
 
 require('lor/lor_utils')
 _libs.req('maths', 'strings', 'tables')
 _libs.lor.req('functional', 'strings', 'tables')
 _libs.lor.chat = lor_chat
+
+local mprefix = _libs.lor.include_addon_name and '[%s]':format(_addon.name) or ''
 
 
 function atc(...)
@@ -21,7 +23,7 @@ function atc(...)
         args = args:slice(2)
     end
     local msg = lor.G.windower.to_shift_jis(" ":join(args))
-    lor.G.windower.add_to_chat(c, msg)
+    lor.G.windower.add_to_chat(c, mprefix..msg)
 end
 
 
@@ -33,18 +35,18 @@ function atcc(...)
         args = args:slice(2)
     end
     local msg = lor.G.windower.to_shift_jis(" ":join(args))
-    lor.G.windower.add_to_chat(0, msg:colorize(c))
+    lor.G.windower.add_to_chat(0, mprefix..msg:colorize(c))
 end
 
 
 function atcs(msg)
-    lor.G.windower.add_to_chat(0, windower.to_shift_jis(tostring(msg)))
+    lor.G.windower.add_to_chat(0, windower.to_shift_jis(tostring(mprefix..msg)))
 end
 
 
 function atcd(c, msg)
-    if show_debug then
-        atc(c, msg)
+    if show_debug or _libs.lor.debug then
+        atc(c, mprefix..msg)
     end
 end
 
@@ -70,7 +72,7 @@ function atcf(...)
         msg = args[1]:format(unpack(args:slice(2)))
         --lor.G.windower.add_to_chat(c, string.format(args[1], unpack(args:slice(2))))
     end
-    lor.G.windower.add_to_chat(c, lor.G.windower.to_shift_jis(msg))
+    lor.G.windower.add_to_chat(c, lor.G.windower.to_shift_jis(mprefix..msg))
 end
 
 
@@ -93,7 +95,7 @@ function atcfs(...)
         --lor.G.windower.add_to_chat(c, string.format(args[1], unpack(map(tostring, args:slice(2)))))
         msg = args[1]:format(unpack(map(tostring, args:slice(2))))
     end
-    lor.G.windower.add_to_chat(c, lor.G.windower.to_shift_jis(msg))
+    lor.G.windower.add_to_chat(c, lor.G.windower.to_shift_jis(mprefix..msg))
 end
 
 
@@ -116,7 +118,7 @@ function atcns(...)
         --lor.G.windower.add_to_chat(c, string.format(args[1], unpack(map(tostring, args:slice(2)))))
         msg = args[1]:format(unpack(map(tostring, args:slice(2))))
     end
-    lor.G.windower.add_to_chat(c, msg)
+    lor.G.windower.add_to_chat(c, mprefix..msg)
 end
 
 
