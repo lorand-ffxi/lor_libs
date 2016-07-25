@@ -5,7 +5,7 @@
 
 local lor_chat = {}
 lor_chat._author = 'Ragnarok.Lorand'
-lor_chat._version = '2016.07.24.0'
+lor_chat._version = '2016.07.24.1'
 
 require('lor/lor_utils')
 _libs.req('maths', 'strings', 'tables')
@@ -22,7 +22,8 @@ function atc(...)
         c = args[1]
         args = args:slice(2)
     end
-    local msg = lor.G.windower.to_shift_jis(" ":join(args))
+    --local msg = lor.G.windower.to_shift_jis(" ":join(args))
+    local msg = " ":join(args)
     lor.G.windower.add_to_chat(c, mprefix..msg)
 end
 
@@ -34,7 +35,8 @@ function atcc(...)
         c = args[1]
         args = args:slice(2)
     end
-    local msg = lor.G.windower.to_shift_jis(" ":join(args))
+    --local msg = lor.G.windower.to_shift_jis(" ":join(args))
+    local msg = " ":join(args)
     lor.G.windower.add_to_chat(0, mprefix..msg:colorize(c))
 end
 
@@ -46,7 +48,7 @@ end
 
 function atcd(c, msg)
     if show_debug or _libs.lor.debug then
-        atc(c, mprefix..msg)
+        atc(c, msg)
     end
 end
 
@@ -72,7 +74,8 @@ function atcf(...)
         msg = args[1]:format(unpack(args:slice(2)))
         --lor.G.windower.add_to_chat(c, string.format(args[1], unpack(args:slice(2))))
     end
-    lor.G.windower.add_to_chat(c, lor.G.windower.to_shift_jis(mprefix..msg))
+    --lor.G.windower.add_to_chat(c, lor.G.windower.to_shift_jis(mprefix..msg))
+    lor.G.windower.add_to_chat(c, mprefix..msg)
 end
 
 
@@ -95,7 +98,8 @@ function atcfs(...)
         --lor.G.windower.add_to_chat(c, string.format(args[1], unpack(map(tostring, args:slice(2)))))
         msg = args[1]:format(unpack(map(tostring, args:slice(2))))
     end
-    lor.G.windower.add_to_chat(c, lor.G.windower.to_shift_jis(mprefix..msg))
+    --lor.G.windower.add_to_chat(c, lor.G.windower.to_shift_jis(mprefix..msg))
+    lor.G.windower.add_to_chat(c, mprefix..msg)
 end
 
 

@@ -6,7 +6,7 @@
 
 local lor_tables = {}
 lor_tables._author = 'Ragnarok.Lorand'
-lor_tables._version = '2016.07.24.0'
+lor_tables._version = '2016.07.24.1'
 
 require('lor/lor_utils')
 _libs.req('tables')
@@ -204,6 +204,9 @@ function table.expanded_invert(t)
 end
 
 
+--[[
+    Returns true if the type of any value in t is table or function.
+--]]
 function table.has_nested(t)
     for k,v in pairs(t) do
         if any_eq(type(v), 'table', 'function') then
@@ -250,12 +253,56 @@ end
 function table.str(t) return '{%s}':format(', ':join(map(tostring, t))) end
 
 
+--[[
+    Returns the value for the given keys of arbitrary depth.
+    If a table is provided for any given level, the first available value is
+    chosen as tehkey for that level.  Fails fast if a given level does not have
+    a value for that level's key.
+    Returns t[k1][k2]...[kN] or nil if any sub-table does not contain the key
+    provided for that level.
+--]]
+function table.get_nested_value(t, ...)
+    if t == nil then return nil end
+    local nested = {...}
+    local sub_t = t
+    for _,k in pairs(nested) do
+        if istable(k) then
+            for _,sk in pairs(k) do
+                if sub_t[sk] ~= nil then
+                    sub_t = sub_t[sk]
+                    break
+                end
+            end
+        else
+            sub_t = sub_t[k]
+        end
+        if sub_t == nil then return nil end
+    end
+    return sub_t
+end
+
+--[[
+    Tests whether or not table t has a value at a given key of arbitrary depth.
+    If a table is provided for any given level, the first available value is
+    chosen as tehkey for that level.  Fails fast if a given level does not have
+    a value for that level's key.
+    Returns true if t[k1][k2]...[kN] ~= nil
+--]]
 function table.has_nested_key(t, ...)
     if t == nil then return false end
     local nested = {...}
     local sub_t = t
     for _,k in pairs(nested) do
-        sub_t = sub_t[k]
+        if istable(k) then
+            for _,sk in pairs(k) do
+                if sub_t[sk] ~= nil then
+                    sub_t = sub_t[sk]
+                    break
+                end
+            end
+        else
+            sub_t = sub_t[k]
+        end
         if sub_t == nil then return false end
     end
     return true
