@@ -5,7 +5,7 @@
 
 local lor_func = {}
 lor_func._author = 'Ragnarok.Lorand'
-lor_func._version = '2016.07.17'
+lor_func._version = '2016.07.30'
 
 require('lor/lor_utils')
 _libs.req('functions')
@@ -121,8 +121,8 @@ end
 
 
 --[[
-    Returns the result of applying function fnc to every value in tbl
-    without modifying tbl.
+    Returns the result of applying function fn to every value in tbl without
+    modifying tbl.
 --]]
 function trace.map(fn, tbl)
     local rtbl = {}
@@ -134,7 +134,20 @@ end
 
 
 --[[
-    Returns the result of applying function fnc to every key in tbl without
+    Returns the result of applying function fn to the value at every index in
+    tbl without modifying tbl.
+--]]
+function trace.imap(fn, tbl)
+    local r = {}
+    for i = 1, #tbl do
+        r[i] = fn(tbl[i])
+    end
+    return r
+end
+
+
+--[[
+    Returns the result of applying function fn to every key in tbl without
     modifying tbl.
 --]]
 function trace.kmap(fn, tbl)
@@ -147,7 +160,7 @@ end
 
 
 --[[
-    Returns the result of applying function fnc to every key and value in
+    Returns the result of applying function fn to every key and value in
     tbl without modifying tbl.  Useful for applying tostring() to both.
 --]]
 function trace.dmap(fn, tbl)

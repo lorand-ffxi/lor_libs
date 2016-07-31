@@ -5,7 +5,7 @@
 
 local lor_chat = {}
 lor_chat._author = 'Ragnarok.Lorand'
-lor_chat._version = '2016.07.24.1'
+lor_chat._version = '2016.07.30.0'
 
 require('lor/lor_utils')
 _libs.req('maths', 'strings', 'tables')
@@ -47,7 +47,7 @@ end
 
 
 function atcd(c, msg)
-    if show_debug or _libs.lor.debug then
+    if _libs.lor.debug then
         atc(c, msg)
     end
 end
