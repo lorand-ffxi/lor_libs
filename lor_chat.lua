@@ -5,7 +5,7 @@
 
 local lor_chat = {}
 lor_chat._author = 'Ragnarok.Lorand'
-lor_chat._version = '2016.07.30.0'
+lor_chat._version = '2016.07.31.0'
 
 require('lor/lor_utils')
 _libs.req('maths', 'strings', 'tables')
@@ -23,7 +23,7 @@ function atc(...)
         args = args:slice(2)
     end
     --local msg = lor.G.windower.to_shift_jis(" ":join(args))
-    local msg = " ":join(args)
+    local msg = ' ':join(args)
     lor.G.windower.add_to_chat(c, mprefix..msg)
 end
 
@@ -36,7 +36,7 @@ function atcc(...)
         args = args:slice(2)
     end
     --local msg = lor.G.windower.to_shift_jis(" ":join(args))
-    local msg = " ":join(args)
+    local msg = ' ':join(args)
     lor.G.windower.add_to_chat(0, mprefix..msg:colorize(c))
 end
 
@@ -140,6 +140,14 @@ end
 local function fmt_output(s, w)
     local sp = ' ':rep(w - tostring(s):wlen())
     return s..sp
+end
+
+
+function col_width(strs)
+    local px_lens = T(map(string.px_len, strs))
+    local max_len = px_lens:max()
+    --local min_len = px_lens:min()
+    return roundup(max_len / 7.0)
 end
 
 

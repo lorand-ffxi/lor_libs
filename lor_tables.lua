@@ -6,7 +6,7 @@
 
 local lor_tables = {}
 lor_tables._author = 'Ragnarok.Lorand'
-lor_tables._version = '2016.07.24.1'
+lor_tables._version = '2016.07.30.0'
 
 require('lor/lor_utils')
 _libs.req('tables')
@@ -306,6 +306,19 @@ function table.has_nested_key(t, ...)
         if sub_t == nil then return false end
     end
     return true
+end
+
+
+--[[
+    Treats each value in t as a regex pattern to match against the plain text
+    string val.  Returns the match if found, otherwise returns nil.
+--]]
+function table.matches(t, val)
+    for _,rx in pairs(t) do
+        local m = val:match(rx)
+        if m then return m end
+    end
+    return nil
 end
 
 

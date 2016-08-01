@@ -5,7 +5,7 @@
 
 local lor_str = {}
 lor_str._author = 'Ragnarok.Lorand'
-lor_str._version = '2016.07.17'
+lor_str._version = '2016.07.31'
 
 require('lor/lor_utils')
 _libs.req('strings')
@@ -75,21 +75,21 @@ function string.colorize(str, new_col, reset_col)
 end
 
 
+function string.px_len(s)
+    local wl = 0
+    for chr, cnt in pairs(char_counts(s)) do
+        wl = wl + ((char_widths[chr] or 9) * cnt)
+    end
+    return wl
+end
+
 --[[
     Returns a weighted length for the given string given that FFXI's chat
     log font is not fixed-width.
     Max weighted line width after timestamp is about 192 at 1600x900 game window
 --]]
 function string.wlen(s)
-    local wl = 0
-    --for c in tostring(s):gmatch('.') do
-    --    wl = wl + (char_widths[c] or 9)
-    --end
-    for chr, cnt in pairs(char_counts(s)) do
-        wl = wl + ((char_widths[chr] or 9) * cnt)
-    end
-    return roundup(wl / 7)
-    --return math.floor(wl + 0.5)
+    return roundup(string.px_len(s) / 7)
 end
 
 
@@ -114,6 +114,16 @@ function string.join(jstr, ...)
         i = i + 1
     end
     return building
+end
+
+
+function string.isnum(s)
+    return (tonumber(s) ~= nil)
+end
+
+
+function string.xmlify(s)
+    return s:lower():gsub('[ -]', '_'):gsub('%.', '')
 end
 
 
