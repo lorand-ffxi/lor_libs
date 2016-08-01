@@ -1,11 +1,18 @@
 --[[
-    Some functional programming functions
+    Settings library that saves settings as a lua file instead of XML.  The
+    config library is too inflexible for storing k,v pairs when keys contain
+    invalid xml tags, and XML is very verbose.  This was easier than finding or
+    writing a JSON writer since the included JSON library is for reading only.
+    
+    Any valid lua can be loaded by this library.  Results may be unpredictable
+    if saving tables that contain types other than string/number/table.
+    
     Author: Ragnarok.Lorand
 --]]
 
 local lor_settings = {}
 lor_settings._author = 'Ragnarok.Lorand'
-lor_settings._version = '2016.07.31'
+lor_settings._version = '2016.07.31.1'
 
 require('lor/lor_utils')
 _libs.lor.settings = lor_settings
@@ -14,25 +21,31 @@ files = require('files')
 
 
 function lor_settings.load(filepath, defaults)
-    --print('Loading %s...':format(filepath))
     if type(filepath) ~= 'string' then
         filepath, defaults = 'data/settings.lua', filepath
     end
     local loaded = nil
     local fcontents = files.read(filepath)
-    --pprint(fcontents)
     if (fcontents ~= nil) then
         loaded = loadstring(fcontents)()
     end
-    --pprint(loaded)
     
-    loaded = loaded or defaults
+    local do_save = false
+    if loaded == nil then
+        loaded = defaults
+        do_save = true
+    end
+    
     local m = getmetatable(loaded)
     if m == nil then
         m = {}
         setmetatable(loaded, m)
     end
     m.__settings_path = filepath
+    
+    if do_save then
+        lor_settings.save(loaded)
+    end
     return loaded
 end
 
@@ -90,16 +103,6 @@ function lor_settings.save(settings_tbl)
         error('Unexpected error occurred while preparing output')
         return
     end
-    
-    --[[
-    local file_contents = 'local content = {\n'
-    for _,line in pairs(prepared) do
-        local _line = '\t%s':format(line)
-        file_contents = file_contents.._line
-    end
-    file_contents = file_contents..'}\n'
-    files.write(m.__settings_path, file_contents)
-    --]]
     
     local filepath = windower.addon_path .. m.__settings_path
     local f = io.open(filepath, 'w')
