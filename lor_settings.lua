@@ -26,7 +26,7 @@
 
 local lor_settings = {}
 lor_settings._author = 'Ragnarok.Lorand'
-lor_settings._version = '2016.08.07.0'
+lor_settings._version = '2016.08.14.0'
 
 require('lor/lor_utils')
 _libs.lor.settings = lor_settings
@@ -192,10 +192,11 @@ end
 
 --[[
     Save the settings table to the path provided when it was loaded.
+    quiet: (optional) boolean whether or not to hide the saved message
     indent: (optional) string or number of spaces to use (default: 4 spaces)
     line_end: (optional) newline character for each line (default: \n)
 --]]
-function lor_settings.save(settings_tbl, indent, line_end)
+function lor_settings.save(settings_tbl, quiet, indent, line_end)
     indent = (type(indent) == 'number') and ' ':rep(indent) or indent
     indent = (type(indent) == 'string') and indent or '    '
     line_end = (type(line_end) == 'string') and line_end or '\n'
@@ -221,7 +222,9 @@ function lor_settings.save(settings_tbl, indent, line_end)
     f:write('}', line_end)
     f:close()
     
-    windower.add_to_chat(1, 'Saved settings to: '..filepath)
+    if not quiet then
+        windower.add_to_chat(1, 'Saved settings to: '..filepath)
+    end
 end
 
 
