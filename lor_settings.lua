@@ -26,11 +26,11 @@
 
 local lor_settings = {}
 lor_settings._author = 'Ragnarok.Lorand'
-lor_settings._version = '2016.08.01.1'
+lor_settings._version = '2016.08.07.0'
 
 require('lor/lor_utils')
 _libs.lor.settings = lor_settings
-_libs.lor.req('chat', 'tables')
+_libs.lor.req('chat', 'tables', {n='strings',v='2016.08.07'})
 _libs.req('tables', 'sets')
 files = require('files')
 
@@ -115,17 +115,14 @@ end
 
 
 --[[
-    Enclose the given string in quotation marks.  Prefers single quotes; if the
-    string contains single quotes, double quotes are used; if the string
-    contains both, then single quotes are escaped and used.
+    Returns the class prefix for the given table, if supported
 --]]
-local function str_prep(s)
-    if s:match("'") == nil then
-        return "'%s'":format(s)
-    elseif s:match('"') == nil then
-        return '"%s"':format(s)
+local function t_prefix(obj)
+    local oclass = class(obj)
+    if valid_classes:contains(oclass) then
+        return oclass:match('^%u')
     end
-    return "'%s'":format(s:gsub("'","\\'"))
+    return ''
 end
 
 
@@ -138,8 +135,8 @@ end
     If all entries have numeric keys, the first key is 1, and those keys are in
     sequential order, then the table is treated like a list (i.e., no key value
     is stored).  Otherwise, entries are stored as [key] = value.  Strings are
-    enclosed in quotation marks and escaped if necessary via the str_prep()
-    function above.
+    enclosed in quotation marks and escaped if necessary via the enquote()
+    lor_strings method.
 --]]
 local function prepare(t, indent)
     local res = {}
@@ -159,17 +156,13 @@ local function prepare(t, indent)
         elseif not is_ordered_list then
             k = tostring(_k)
             if not no_quote_types:contains(type(_k)) then
-                k = str_prep(k)
+                k = k:enquote()
             end
             k = '[%s] = ':format(k)
         end
         
         if type(v) == 'table' then
-            local vclass = class(v)
-            local class_prefix = ''
-            if valid_classes:contains(vclass) then
-                class_prefix = vclass:match('^%u')
-            end
+            local class_prefix = t_prefix(v)
             local sub_table = prepare(v, indent)
             if #sub_table < 1 then
                 res[#res+1] = '%s%s{}':format(k, class_prefix)
@@ -184,7 +177,7 @@ local function prepare(t, indent)
         else
             local val = tostring(v)
             if not no_quote_types:contains(type(v)) then
-                val = str_prep(val)
+                val = val:enquote()
             end
             res[#res+1] = '%s%s':format(k, val)
         end
@@ -220,12 +213,12 @@ function lor_settings.save(settings_tbl, indent, line_end)
     end
     
     local filepath = windower.addon_path .. m.__settings_path
-    local f = io.open(filepath, 'w')
-    f:write('return {'..line_end)
+    local f = io.open(filepath, 'wb')   --'w' -> \r\n; 'wb' -> \n
+    f:write('return {', line_end)
     for _,line in pairs(prepared) do
-        f:write(indent..line..line_end)
+        f:write(indent, line, line_end)
     end
-    f:write('}'..line_end)
+    f:write('}', line_end)
     f:close()
     
     windower.add_to_chat(1, 'Saved settings to: '..filepath)
