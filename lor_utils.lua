@@ -5,9 +5,9 @@
 --]]
 
 local lor_utils = {}
-lor_utils._version = '2016.08.02'
+lor_utils._version = '2016.08.27'
 lor_utils._author = 'Ragnarok.Lorand'
-lor_utils.load_order = {'functional','math','strings','tables','chat','exec','settings'}
+lor_utils.load_order = {'functional','math','strings','tables','chat','exec','serialization','settings'}
 
 _libs = _libs or {}
 _libs.lor = _libs.lor or {}
