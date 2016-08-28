@@ -5,7 +5,7 @@
 --]]
 
 local lor_utils = {}
-lor_utils._version = '2016.08.27'
+lor_utils._version = '2016.08.28'
 lor_utils._author = 'Ragnarok.Lorand'
 lor_utils.load_order = {'functional','math','strings','tables','chat','exec','serialization','settings'}
 
@@ -20,6 +20,54 @@ if not _libs.lor.utils then
     lor.G = gearswap and gearswap._G or _G
     xpcall = lor.G.xpcall
     lor.watc = lor.G.windower.add_to_chat
+    
+    os.path = os.path or {}
+    
+    os.path.exists = function(path)
+        return lor.G.windower.file_exists(path) or lor.G.windower.dir_exists(path)
+    end
+    
+    os.path.mkdir = lor.G.windower.create_dir
+    
+    os.path.join = function(root, ...)
+        local result = root or '/'
+        local subs = {...}
+        for _,p in ipairs(subs) do
+            local trailing = result:endswith('/')
+            local leading = p:startswith('/')
+            local s = (trailing or leading) and '' or '/'
+            result = '%s%s%s':format(result, s, p)
+        end
+        return result
+    end
+    
+    os.path.split = function(path)
+        local parts = path:psplit('[\\\\/]')
+        local result = T{}
+        for _,p in ipairs(parts) do
+            if #p > 0 then
+                result:append(p)
+            end
+        end
+        return result
+    end
+    
+    os.path.mkdirs = function(root, path)
+        local parts = os.path.split(path)
+        local cwd = root
+        for _,p in ipairs(parts) do
+            cwd = os.path.join(cwd, p)
+            if not lor.G.windower.dir_exists(cwd) then
+                os.path.mkdir(cwd)
+            end
+        end
+    end
+    
+    os.path.parent = function(path)
+        local parts = os.path.split(path)
+        parts[#parts] = nil
+        return os.path.join(unpack(parts))
+    end
     
     function _handler(err)
         --[[

@@ -26,13 +26,13 @@
 
 local lor_settings = {}
 lor_settings._author = 'Ragnarok.Lorand'
-lor_settings._version = '2016.08.14.0'
+lor_settings._version = '2016.08.28.0'
 
 require('lor/lor_utils')
 _libs.lor.settings = lor_settings
 _libs.lor.req('chat', 'tables', {n='strings',v='2016.08.07'})
 _libs.req('tables', 'sets')
-files = require('files')
+local files = require('files')
 
 local no_quote_types = S{'number','boolean','nil'}
 local valid_classes = S{'List','Set','Table'}
@@ -214,6 +214,8 @@ function lor_settings.save(settings_tbl, quiet, indent, line_end)
     end
     
     local filepath = windower.addon_path .. m.__settings_path
+    os.path.mkdirs(windower.addon_path, os.path.parent(m.__settings_path))
+    
     local f = io.open(filepath, 'wb')   --'w' -> \r\n; 'wb' -> \n
     f:write('return {', line_end)
     for _,line in pairs(prepared) do
