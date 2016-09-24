@@ -256,7 +256,7 @@ function table.str(t) return '{%s}':format(', ':join(map(tostring, t))) end
 --[[
     Returns the value for the given keys of arbitrary depth.
     If a table is provided for any given level, the first available value is
-    chosen as tehkey for that level.  Fails fast if a given level does not have
+    chosen as the key for that level.  Fails fast if a given level does not have
     a value for that level's key.
     Returns t[k1][k2]...[kN] or nil if any sub-table does not contain the key
     provided for that level.

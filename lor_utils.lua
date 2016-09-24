@@ -5,9 +5,9 @@
 --]]
 
 local lor_utils = {}
-lor_utils._version = '2016.08.28'
+lor_utils._version = '2016.09.24'
 lor_utils._author = 'Ragnarok.Lorand'
-lor_utils.load_order = {'functional','math','strings','tables','chat','exec','serialization','settings'}
+lor_utils.load_order = {'functional','math','strings','tables','chat','exec','serialization','settings','argparse'}
 
 _libs = _libs or {}
 _libs.lor = _libs.lor or {}
@@ -132,6 +132,28 @@ if not _libs.lor.utils then
         local y,m,d,o = date_str:match('^(%d%d%d%d)[^0-9]*(%d%d)[^0-9]*(%d%d)[^0-9]*(.*)')
         local x = (#o > 0) and (tonumber(o) or 1) or 0
         return os.time({year=y,month=m,day=d}) + x
+    end
+    
+    function bool(obj)
+        if type(obj) == 'boolean' then
+            return obj
+        elseif type(obj) == 'string' then
+            return obj:lower() == 'true'
+        end
+        return obj
+    end
+    
+    function cast(obj, type_name)
+        if type(obj) == type_name then
+            return obj
+        elseif type_name == 'string' then
+            return tostring(obj)
+        elseif (type_name == 'number') or (type_name == 'int') or (type_name == 'float') then
+            return tonumber(obj)
+        elseif (type_name == 'bool') or (type_name == 'boolean') then
+            return bool(obj)
+        end
+        error('Unable to cast %s to type %s':format(tostring(obj), type_name))
     end
     
     function isfunc(obj) return type(obj) == 'function' end

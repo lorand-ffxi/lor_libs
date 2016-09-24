@@ -26,7 +26,7 @@
 
 local lor_settings = {}
 lor_settings._author = 'Ragnarok.Lorand'
-lor_settings._version = '2016.08.28.0'
+lor_settings._version = '2016.08.28.1'
 
 require('lor/lor_utils')
 _libs.lor.settings = lor_settings
@@ -213,7 +213,8 @@ function lor_settings.save(settings_tbl, quiet, indent, line_end)
         return
     end
     
-    local filepath = windower.addon_path .. m.__settings_path
+    --local filepath = windower.addon_path .. m.__settings_path
+    local filepath = os.path.join(windower.addon_path, m.__settings_path)
     os.path.mkdirs(windower.addon_path, os.path.parent(m.__settings_path))
     
     local f = io.open(filepath, 'wb')   --'w' -> \r\n; 'wb' -> \n
