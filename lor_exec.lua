@@ -6,7 +6,7 @@
 
 local lor_exec = {}
 lor_exec._author = 'Ragnarok.Lorand'
-lor_exec._version = '2016.10.16'
+lor_exec._version = '2016.10.23'
 
 require('lor/lor_utils')
 _libs.req('maths', 'strings', 'tables')
@@ -48,6 +48,15 @@ function lor_exec.process_input(command, args)
             end
         else
             atc(0, 'Error: Invalid arguments passed for search')
+        end
+    elseif cmd == 'learned' then
+        local wf_spells = windower.ffxi.get_spells()
+        local spell_name = ' ':join(args):lower()
+        for id,spell in pairs(res.spells) do
+            if spell.en:lower() == spell_name then
+                atcfs('%s: %s', spell.en, wf_spells[id])
+                break
+            end
         end
     elseif cmd == 'spells' then
         local stype = args[1]

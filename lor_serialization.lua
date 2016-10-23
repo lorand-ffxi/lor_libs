@@ -19,7 +19,7 @@
 
 local lor_serialization = {}
 lor_serialization._author = 'Ragnarok.Lorand'
-lor_serialization._version = '2016.08.27.0'
+lor_serialization._version = '2016.10.22.0'
 
 require('lor/lor_utils')
 _libs.lor.serialization = lor_serialization
@@ -29,6 +29,8 @@ files = require('files')
 
 local no_quote_types = S{'number','boolean','nil'}
 local valid_classes = S{'List','Set','Table'}
+local list_types = S{'List','Set'}
+local hash_types = S{'Table'}
 
 
 --[[
@@ -70,6 +72,120 @@ local function t_prefix(obj)
 end
 
 
+local function is_ordered_and_len(tbl)
+    local tlen = 0
+    local is_ordered_list = true
+    for k,_ in pairs(tbl) do
+        tlen = tlen + 1
+        if k ~= tlen then is_ordered_list = false end
+    end
+    return is_ordered_list, tlen
+end
+
+
+local function json_wrappers(obj)
+    local obj_open, obj_close, obj_empty = '{', '}', '{}'
+    if list_types:contains(class(obj)) then
+        obj_open, obj_close, obj_empty = '[', ']', '[]'
+    elseif hash_types:contains(class(obj)) then
+        obj_open, obj_close, obj_empty = '{', '}', '{}'
+    else
+        local is_ordered_list, tlen = is_ordered_and_len(obj)
+        if is_ordered_list then
+            obj_open, obj_close, obj_empty = '[', ']', '[]'
+        end
+    end
+    return obj_open, obj_close, obj_empty
+end
+
+
+--[[
+    Prepare the given table to be converted to a string.  Recursive for sub-tables. Returns a list of strings, where
+    each entry is a line of output.
+    
+    If all entries have numeric keys, the first key is 1, and those keys are in sequential order, then the table is
+    treated like a list (i.e., no key value is stored).  Otherwise, entries are stored as key: value.  Strings are
+    enclosed in quotation marks and escaped if necessary via the enquote() lor_strings method.
+--]]
+local function prepare_json(t, indent, collapse)
+    local res = {}
+    local is_ordered_list, tlen = is_ordered_and_len(t)
+    local kfmt = collapse and '%s:' or '%s: '
+    
+    local i = 1
+    for _k,_v in opairs(t) do
+        local k,v = '',_v
+        if class(t) == 'Set' then   --Values are stored as {key1=true,key2=true}, but the
+            v = _k                  --constructor is S{key1,key2}, so treat keys as values
+        elseif not is_ordered_list then
+            k = tostring(_k)
+            if not no_quote_types:contains(type(_k)) then
+                k = k:enquote()
+            end
+            k = kfmt:format(k)
+        end
+        
+        if type(v) == 'table' then
+            local st_open, st_close, st_empty = json_wrappers(v)
+            local sub_table = prepare_json(v, indent, collapse)
+            if #sub_table < 1 then
+                res[#res+1] = '%s%s':format(k, st_empty)
+            else
+                --Encorporate the subtable into the result, adding a level of indentation
+                res[#res+1] = '%s%s':format(k, st_open)
+                for _,line in opairs(sub_table) do
+                    res[#res+1] = '%s%s':format(indent, line)
+                end
+                res[#res+1] = st_close
+            end
+        else
+            local val = tostring(v)
+            if not no_quote_types:contains(type(v)) then
+                val = val:enquote()
+            end
+            res[#res+1] = '%s%s':format(k, val)
+        end
+        
+        if i < tlen then
+            res[#res] = res[#res]..','
+        end
+        i = i + 1
+    end
+    return res
+end
+
+
+--[[
+    Encode the given object as a lua string.
+    indent: (optional) string or number of spaces to use (default: none)
+    line_end: (optional) newline character for each line (default: none)
+--]]
+function lor_serialization.json_dumps(obj, indent, line_end)
+    indent = (type(indent) == 'number') and ' ':rep(indent) or indent
+    indent = (type(indent) == 'string') and indent or ''
+    line_end = (type(line_end) == 'string') and line_end or ''
+    
+    if type(obj) == 'string' then
+        return obj:enquote()
+    elseif no_quote_types:contains(type(obj)) then
+        return tostring(obj)
+    end
+    
+    local prepared = prepare_json(obj, indent, true)
+    if prepared == nil then
+        error('Unexpected error occurred while preparing output')
+        return
+    end
+    
+    local obj_open, obj_close, obj_empty = json_wrappers(obj)
+    local json_str = '%s%s':format(obj_open, line_end)
+    for _,line in pairs(prepared) do
+        json_str = '%s%s%s%s':format(json_str, indent, line, line_end)
+    end
+    return '%s%s%s':format(json_str, obj_close, line_end)
+end
+
+
 --[[
     Prepare the given table to be converted to a string.  Recursive for
     sub-tables. Returns a list of strings, where each entry is a line of output.
@@ -82,20 +198,14 @@ end
 --]]
 local function prepare(t, indent, collapse)
     local res = {}
-    local tlen = 0
-    local is_ordered_list = true
-    for k,_ in pairs(t) do
-        tlen = tlen + 1
-        if k ~= tlen then is_ordered_list = false end
-    end
-    local is_set = (class(t) == 'Set')
+    local is_ordered_list, tlen = is_ordered_and_len(t)
     local kfmt = collapse and '[%s]=' or '[%s] = '
     
     local i = 1
     for _k,_v in opairs(t) do
         local k,v = '',_v
-        if is_set then  --Values are stored as {key1=true,key2=true}, but the
-            v = _k      --constructor is S{key1,key2}, so treat keys as values
+        if class(t) == 'Set' then   --Values are stored as {key1=true,key2=true}, but the
+            v = _k                  --constructor is S{key1,key2}, so treat keys as values
         elseif not is_ordered_list then
             k = tostring(_k)
             if not no_quote_types:contains(type(_k)) then
@@ -132,6 +242,7 @@ local function prepare(t, indent, collapse)
     end
     return res
 end
+
 
 --[[
     Encode the given object as a lua string.
