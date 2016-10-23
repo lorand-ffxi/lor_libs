@@ -26,7 +26,7 @@
 
 local lor_settings = {}
 lor_settings._author = 'Ragnarok.Lorand'
-lor_settings._version = '2016.10.23.0'
+lor_settings._version = '2016.10.23.1'
 
 require('lor/lor_utils')
 _libs.lor.settings = lor_settings
@@ -63,6 +63,25 @@ function lor_settings.convert_config(original_path, new_path)
         atcf(123, 'Original config not found: %s', original_path)
         return
     end
+    
+    local filepath = os.path.join(windower.addon_path, new_path)
+    local suffix = ''
+    local backup_path = filepath
+    while windower.file_exists(backup_path) do
+        backup_path = '%s.backup%s':format(filepath, suffix)
+        suffix = (suffix == '') and 0 or (suffix + 1)
+    end
+    
+    if backup_path ~= filepath then
+        local result, msg = os.rename(filepath, backup_path)
+        if not result then
+            atcfs('Settings not converted - error backing up original file: %s', msg)
+            return
+        else
+            atcfs('Backed up existing file: %s', backup_path)
+        end
+    end
+    
     setmetatable(original, nil)     --remove the config library's metatable
     local converted = lor_settings.load(new_path, original)
     converted:save()
@@ -215,7 +234,6 @@ function lor_settings.save(settings_tbl, quiet, indent, line_end)
         return
     end
     
-    --local filepath = windower.addon_path .. m.__settings_path
     local filepath = os.path.join(windower.addon_path, m.__settings_path)
     os.path.mkdirs(windower.addon_path, os.path.parent(m.__settings_path))
     
