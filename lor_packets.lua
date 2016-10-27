@@ -6,10 +6,11 @@
 
 local lor_packets = {}
 lor_packets._author = 'Ragnarok.Lorand'
-lor_packets._version = '2016.10.02.0'
+lor_packets._version = '2016.10.27.0'
 
 require('lor/lor_utils')
 _libs.lor.packets = lor_packets
+local elements = require('resources')['elements']
 
 lor_packets.messages_blacklist = S{1,6,8,9,10,11,12,13,14,15,19,20,21,22,23,30,31,32,33,36,37,38,39,44,45,50,53,54,57,58,59,60,61,63,65,67,69,70,76,77,79,80,81,95,96,97,98,105,107,124,132,149,151,152,157,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,195,196,201,207,208,209,211,212,213,214,222,223,229,232,234,235,239,248,249,250,253,254,255,256,257,258,259,260,261,262,263,264,265,273,276,281,281,285,286,287,288,289,290,291,292,293,294,295,296,297,298,299,300,301,302,310,314,336,339,340,352,353,354,355,357,358,361,363,366,367,368,371,372,373,380,381,382,383,384,385,386,387,388,389,390,391,392,393,394,395,396,397,398,415,419,434,436,438,440,442,443,444,447,448,449,450,455,456,457,458,459,460,461,462,463,464,465,466,467,468,469,470,471,472,473,474,475,476,478,512,513,535,536,537,538,540,541,542,543,544,545,548,549,550,551,552,553,554,555,556,557,558,559,568,573,576,577,578,582,583,584,587,588,590,592,601,603,606,609,610,611,612,613,614,615,616,617,618,619,620,621,622,623,624,625,626,627,628,629,630,631,632,633,634,635,636,652,669,673,676,677,678,679,680,681,682,683,684,685,686,687,688,689,690,691,692,693,694,695,696,697,698,699,704,705,706,707,708,709,710,711,712,713,714,715,718,719,720,721,722,723,724,725,726,727,728,729,731,735}
 lor_packets.messages_initiating = S{3,43,326,327,675,716}
@@ -34,6 +35,30 @@ local function get_bit_packed(dat_string, start, stop)
         c_count = c_count - 1
     end
     return newval
+end
+
+
+--[[
+    Incoming Packet ID 0x037 - Character Update
+    Contains Indi spell information (parsing based on Gearswap)
+--]]
+function lor_packets.parse_char_update(data)
+    local indi_info = {}
+    local indi_byte = data:byte(0x59)
+    if ((indi_byte%128)/64) >= 1 then
+        indi_info.active = true
+        indi_info.element_id = indi_byte % 8
+        indi_info.element = elements[indi_info.element_id].en
+        indi_info.size = math.floor((indi_byte%64)/16) + 1      --Range: 1~4
+        if ((indi_byte%16)/8) >= 1 then
+            indi_info.target = 'Enemy'
+        else
+            indi_info.target = 'Ally'
+        end
+    else
+        indi_info.active = false
+    end
+    return indi_info
 end
 
 
