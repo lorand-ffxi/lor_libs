@@ -42,11 +42,6 @@ function atcc(...)
 end
 
 
-function atcs(msg)
-    global.windower.add_to_chat(0, windower.to_shift_jis(tostring(mprefix..msg)))
-end
-
-
 function atcd(c, msg)
     if _libs.lor.debug then
         atc(c, msg)

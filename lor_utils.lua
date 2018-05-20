@@ -7,7 +7,7 @@ local global = gearswap and gearswap._G or _G   -- Retrieve the true _G since ge
 local lor_utils = {}
 lor_utils._version = '2018.05.20'
 lor_utils._author = 'Ragnarok.Lorand'
-lor_utils.load_order = {'functional','math','strings','tables','chat','exec','serialization','settings','argparse','packets','position','actor','advutils'}
+lor_utils.load_order = {'functional','math','strings','tables','chat','exec','serialization','settings','argparse','packets','ffxi','position','resources','actor','advutils'}
 
 -- Check to see if gearswap has replaced the user_env fake _G; if it has, then reset all global lib caches
 global.gs_user_env = global.gs_user_env or (gearswap and global.user_env or nil)
@@ -242,7 +242,7 @@ return lor_utils
 
 -----------------------------------------------------------------------------------------------------------
 --[[
-Copyright © 2016, Ragnarok.Lorand
+Copyright © 2018, Ragnarok.Lorand
 All rights reserved.
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
