@@ -166,11 +166,11 @@ end
 --]]
 function string.enquote(s)
     if s:match("'") == nil then
-        return "'%s'":format(s)
+        return ("'%s'"):format(s)
     elseif s:match('"') == nil then
-        return '"%s"':format(s)
+        return ('"%s"'):format(s)
     end
-    return "'%s'":format(s:gsub("'","\\'"))
+    return ("'%s'"):format(s:gsub("'","\\'"))
 end
 
 

@@ -67,7 +67,7 @@ local function roundPos(pos)
 end
 
 function lor_position:toString()
-    return '(%s,%s,%s)':format(roundPos(self.pos.x), roundPos(self.pos.y), roundPos(self.pos.z))
+    return ('(%s,%s,%s)'):format(roundPos(self.pos.x), roundPos(self.pos.y), roundPos(self.pos.z))
 end
 
 --[[
