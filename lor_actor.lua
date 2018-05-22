@@ -6,7 +6,7 @@
 
 local lor_actor = {}
 lor_actor._author = 'Ragnarok.Lorand'
-lor_actor._version = '2018.05.20.0'
+lor_actor._version = '2018.05.22.0'
 
 require('tables')
 require('lor/lor_utils')
@@ -83,6 +83,7 @@ function Actor:take_action(action, target)
     target = target or action.name
     atcd(act.en .. string.char(129, 168) .. target .. msg)
 
+    self.last_action = os.clock()
     self:send_cmd(('input %s "%s" "%s"'):format(act.prefix, act.en, target))
     if instant_prefixes:contains(act.prefix) then
         self.action_delay = 2.75
@@ -109,7 +110,7 @@ function Actor:is_acting()
         if self.last_acting_state then                      --If an action was being performed
             self.action_delay = default_delays.post_action  --Set a longer delay
             self.last_action = now                          --The delay will be from this time
-        else                                            --If no action was being performed
+        else                                                --If no action was being performed
             self.action_delay = default_delays.idle         --Set a short delay
         end
         self.last_acting_state = acting                     --Refresh the last acting state
