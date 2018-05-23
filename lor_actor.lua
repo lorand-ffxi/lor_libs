@@ -6,7 +6,7 @@
 
 local lor_actor = {}
 lor_actor._author = 'Ragnarok.Lorand'
-lor_actor._version = '2018.05.22.0'
+lor_actor._version = '2018.05.23.0'
 
 require('tables')
 require('lor/lor_utils')
@@ -75,7 +75,7 @@ end
 
 function Actor:take_action(action, target)
     if action == nil then
-        atcd(('%s:take_action() called with no action'):format(self))
+--        atcd(('%s:take_action() called with no action'):format(self))
         return
     end
     local act = action.action
