@@ -6,7 +6,7 @@
 local global = gearswap and gearswap._G or _G
 local lor_func = {}
 lor_func._author = 'Ragnarok.Lorand'
-lor_func._version = '2018.05.19'
+lor_func._version = '2018.05.26'
 
 require('lor/lor_utils')
 _libs.req('functions')
@@ -225,6 +225,23 @@ function pycomp(comp_str, locals)
 end
 
 
+function lambda(args, body, locals)
+    args = (args ~= nil) and args or ''
+    if body == nil then
+        local _, _, _args, _body = args:find('([^:]-):%s+(.*)')
+        args, body = _args or '', _body
+    end
+    local loaded = loadstring(('return function(%s) return (%s) end'):format(args, body))
+    local fenv = _G
+    locals = locals or {}
+    for k, v in pairs(locals) do
+        fenv[k] = v
+    end
+    setfenv(loaded, fenv)
+    return loaded()
+end
+
+
 --Add the traceable versions of the functions marked to be so to the environment
 for fname,fn in pairs(trace) do
     _G[fname] = traceable(fn)
@@ -235,7 +252,7 @@ return lor_func
 
 -----------------------------------------------------------------------------------------------------------
 --[[
-Copyright © 2016, Ragnarok.Lorand
+Copyright © 2018, Ragnarok.Lorand
 All rights reserved.
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.

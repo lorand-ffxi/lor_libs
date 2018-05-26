@@ -5,7 +5,7 @@
 
 local global = gearswap and gearswap._G or _G   -- Retrieve the true _G since gearswap obfuscates it
 local lor_utils = {}
-lor_utils._version = '2018.05.20'
+lor_utils._version = '2018.05.26'
 lor_utils._author = 'Ragnarok.Lorand'
 lor_utils.load_order = {'functional','math','strings','tables','chat','exec','serialization','settings','argparse','packets','ffxi','position','resources','actor','advutils'}
 
@@ -169,7 +169,7 @@ if not _libs.lor.utils then
     --noinspection GlobalCreationOutsideO
     function class(obj)
         local m = getmetatable(obj)
-        return m and m.__class or type(obj)
+        return m and (m.__class or m.__class__) or type(obj)
     end
     
     --Module loading functions =========================================================================================
