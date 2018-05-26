@@ -9,7 +9,7 @@ local lor_pythonize = {}
 lor_pythonize._author = 'Ragnarok.Lorand'
 lor_pythonize._version = '2018.05.26.0'
 
---require('lor/lor_utils')
+require('lor/lor_utils')
 _libs.lor.pythonize = lor_pythonize
 
 

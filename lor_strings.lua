@@ -172,7 +172,7 @@ function string.enquote(s)
 --    return ("'%s'"):format(s:gsub("'","\\'"))
 end
 
-
+--[[
 function string.startswith(s, ...)
     -- Returns true if this string starts with one of the given strings, false otherwise
     for _, val in pairs({...}) do
@@ -188,7 +188,7 @@ function string.endswith(s, ...)
     end
     return false
 end
-
+--]]
 
 local str_format = string.format
 function string.format(s, ...)
