@@ -6,7 +6,7 @@
 
 local lor_actor = {}
 lor_actor._author = 'Ragnarok.Lorand'
-lor_actor._version = '2018.05.23.0'
+lor_actor._version = '2018.05.27.0'
 
 require('tables')
 require('lor/lor_utils')
@@ -84,7 +84,7 @@ function Actor:take_action(action, target)
     atcd(act.en .. string.char(129, 168) .. target .. msg)
 
     self.last_action = os.clock()
-    self:send_cmd(('input %s "%s" "%s"'):format(act.prefix, act.en, target))
+    self:send_cmd(('input %s "%s" %s'):format(act.prefix, act.en, target))
     if instant_prefixes:contains(act.prefix) then
         self.action_delay = 2.75
     end
