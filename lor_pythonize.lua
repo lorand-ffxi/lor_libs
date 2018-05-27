@@ -5,7 +5,7 @@
 --]]
 
 local global = gearswap and gearswap._G or _G
-local lor_pythonize = {_replaced = {}, _author = 'Ragnarok.Lorand', _version = '2018.05.27.1'}
+local lor_pythonize = {_replaced = {}, _author = 'Ragnarok.Lorand', _version = '2018.05.27.2'}
 
 require('lor/lor_utils')
 _libs.lor.pythonize = lor_pythonize
@@ -40,21 +40,30 @@ local function tbl2str(tbl)
 end
 
 
+local c_next = pairs({})    -- First return value is always the c implementation of next()
 local function iter(...)
     local args = {...}
-    assert(#args <= 2, ('iter() expected 1-2 args, found: %s'):format(#args))
-
-    if #args == 2 then      -- Special case for pairs(tbl) => (next, tbl, nil)
+    if (#args == 2) and ((c_next == args[1]) and type(args[2] == 'table')) then
         return unpack(args)
+    elseif #args == 0 then
+        return nil
     end
-    local iterable = args[1]
 
-    if hasattr(iterable, '__iter__') then
-        return iterable:__iter__()
-    elseif type(iterable) == 'function' then
-        return iterable
-    elseif type(iterable) == 'string' then
-        return string.gmatch(iterable, '.')
+    local iterable
+    if #args == 1 then
+        iterable = args[1]
+        local iter_type = type(iterable)
+        if hasattr(iterable, '__iter__') then
+            return iterable:__iter__()
+        elseif iter_type == 'function' then
+            return iterable
+        elseif iter_type == 'string' then
+            return string.gmatch(iterable, '.')
+        elseif iter_type ~= 'table' then
+            iterable = {iterable}
+        end
+    else
+        iterable = args
     end
 
     local key = nil
@@ -66,33 +75,40 @@ end
 lor_pythonize.iter = iter
 
 
---local c_next = pairs({})    -- First return value is always the c implementation of next()
 local function _to_table(...)
     local args = {...}
-    assert(#args <= 2, ('_to_table() expected 1-2 args, found: %s'):format(#args))
     local tbl = {}
     local i = 1
 
-    if #args == 2 then                              -- Special case for pairs(tbl) => (next, tbl, nil)
+    if (#args == 2) and ((c_next == args[1]) and type(args[2] == 'table')) then
         for k, v in unpack(args) do tbl[k] = v end
     else
-        local iterable = args[1]
-        if hasattr(iterable, '__iter__') then
-            for v in iter(iterable) do
-                tbl[i] = v
-                i = i + 1
-            end
-        elseif type(iterable) == 'function' then
-            for k, v in iterable do
-                if v == nil then
-                    tbl[i] = k
+        if #args == 0 then
+            return tbl
+        elseif #args == 1 then
+            local iterable = args[1]
+            local iter_type = type(iterable)
+            if hasattr(iterable, '__iter__') then
+                for v in iter(iterable) do
+                    tbl[i] = v
                     i = i + 1
-                else
-                    tbl[k] = v
                 end
+            elseif iter_type == 'function' then
+                for k, v in iterable do
+                    if v == nil then
+                        tbl[i] = k
+                        i = i + 1
+                    else
+                        tbl[k] = v
+                    end
+                end
+            elseif iter_type == 'table' then
+                for k, v in pairs(iterable) do tbl[k] = v end
+            else
+                return {iterable}
             end
         else
-            for k, v in pairs(iterable) do tbl[k] = v end
+            return args
         end
     end
     return tbl
@@ -372,8 +388,8 @@ ABC.MutableSet = class(
             end
         end,
         update = function(self, ...)
-            for val in iter(...) do
-                self:add(val)
+            for k, v in iter(...) do
+                if v == nil then self:add(k) else self:add(v) end
             end
         end
     },
@@ -532,8 +548,8 @@ ABC.MutableSequence = class(
         end,
         extend = function(self, ...)
             local i = #self + 1
-            for val in iter(...) do
-                self[i] = val
+            for k, v in iter(...) do
+                if v == nil then self[i] = k else self[i] = v end
                 i = i + 1
             end
         end,
@@ -562,8 +578,8 @@ lor_pythonize.ABC = ABC
 
 local list = class({
     __name__ = 'list',
-    __init__ = function(self, t)
-        self:extend(t)
+    __init__ = function(self, ...)
+        self:extend(...)
     end,
     __newindex = function(self, index, value)
         assert(type(index) == 'number', ('TypeError: list indices must be integers, not %s'):format(type(index)))
@@ -589,9 +605,9 @@ lor_pythonize.list = list
 
 local set = class({
     __name__ = 'set',
-    __init__ = function(self, t)
+    __init__ = function(self, ...)
         rawset(self, '_values', {})
-        self:update(t)
+        self:update(...)
     end,
     __iter__ = function(self)
         local key = nil
@@ -637,8 +653,8 @@ lor_pythonize.set = set
 
 local dict = class({
     __name__ = 'dict',
-    __init__ = function(self, t)
-        self:update(t)
+    __init__ = function(self, ...)
+        self:update(...)
     end,
     update = function(self, ...)
         local args = {...}
