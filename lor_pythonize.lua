@@ -5,10 +5,16 @@
 --]]
 
 local global = gearswap and gearswap._G or _G
-local lor_pythonize = {_replaced = {}, _author = 'Ragnarok.Lorand', _version = '2018.05.27.0'}
+local lor_pythonize = {_replaced = {}, _author = 'Ragnarok.Lorand', _version = '2018.05.27.1'}
 
 require('lor/lor_utils')
 _libs.lor.pythonize = lor_pythonize
+
+
+local function AbstractMethodError(obj, method_name)
+    error(('AbstractMethodError: %s does not have a concrete implementation of %s'):format(class(obj), method_name))
+end
+lor_pythonize.AbstractMethodError = AbstractMethodError
 
 
 local function hasattr(obj, attr)
@@ -16,48 +22,6 @@ local function hasattr(obj, attr)
     return obj[attr] ~= nil
 end
 lor_pythonize.hasattr = hasattr
-
-
-local function isinstance(obj, ...)
-    local args = {...}
-    local obj_type = type(obj)
-    for val in iter(args) do
-        if obj_type == val then return true end
-    end
-    if obj_type == 'nil' then return false end  -- nil would have been caught above if it was specified
-
-    local meta = getmetatable(obj)
-    local obj_class = class(obj)
-    local obj_classname = obj_class and obj_class.__name__
-    if obj_class then
-        for val in iter(args) do
-            if (obj_class == val) or (obj_classname == val) then return true end
-        end
-    end
-
-    if meta then
-        for cls in mro(obj) do
-            for val in iter(args) do
-                if (cls == val) or (cls.__name__ == val) then return true end
-            end
-        end
-    end
-    return false
-end
-lor_pythonize.isinstance = isinstance
-
-
-local function imap(fn, ...)
-    local val = nil
-    local iterable = iter(...)
-    return function()
-        val = iterable()
-        if val then
-            return fn(val)
-        end
-    end
-end
-lor_pythonize.imap = imap
 
 
 local function tbl2str(tbl)
@@ -76,6 +40,33 @@ local function tbl2str(tbl)
 end
 
 
+local function iter(...)
+    local args = {...}
+    assert(#args <= 2, ('iter() expected 1-2 args, found: %s'):format(#args))
+
+    if #args == 2 then      -- Special case for pairs(tbl) => (next, tbl, nil)
+        return unpack(args)
+    end
+    local iterable = args[1]
+
+    if hasattr(iterable, '__iter__') then
+        return iterable:__iter__()
+    elseif type(iterable) == 'function' then
+        return iterable
+    elseif type(iterable) == 'string' then
+        return string.gmatch(iterable, '.')
+    end
+
+    local key = nil
+    return function()
+        key = next(iterable, key)
+        if key ~= nil then return iterable[key] end
+    end
+end
+lor_pythonize.iter = iter
+
+
+--local c_next = pairs({})    -- First return value is always the c implementation of next()
 local function _to_table(...)
     local args = {...}
     assert(#args <= 2, ('_to_table() expected 1-2 args, found: %s'):format(#args))
@@ -108,32 +99,6 @@ local function _to_table(...)
 end
 
 
-local function iter(...)
-    local args = {...}
-    assert(#args <= 2, ('iter() expected 1-2 args, found: %s'):format(#args))
-
-    if #args == 2 then      -- Special case for pairs(tbl) => (next, tbl, nil)
-        return unpack(args)
-    end
-    local iterable = args[1]
-
-    if hasattr(iterable, '__iter__') then
-        return iterable:__iter__()
-    elseif type(iterable) == 'function' then
-        return iterable
-    elseif type(iterable) == 'string' then
-        return string.gmatch(iterable, '.')
-    end
-
-    local key = nil
-    return function()
-        key = next(iterable, key)
-        if key ~= nil then return iterable[key] end
-    end
-end
-lor_pythonize.iter = iter
-
-
 local function sorted(...)
     local tbl = _to_table(...)
     table.sort(tbl)
@@ -152,6 +117,41 @@ local function reversed(...)
     return iter(rev)
 end
 lor_pythonize.reversed = reversed
+
+
+local function imap(fn, ...)
+    local val = nil
+    local iterable = iter(...)
+    return function()
+        val = iterable()
+        if val then
+            return fn(val)
+        end
+    end
+end
+lor_pythonize.imap = imap
+
+
+local function sum(...)
+    local total = 0
+    for val in iter(...) do
+        total = total + val
+    end
+    return total
+end
+lor_pythonize.sum = sum
+
+
+local function max(...)
+    return math.max(unpack(_to_table(...)))
+end
+lor_pythonize.max = max
+
+
+local function min(...)
+    return math.min(unpack(_to_table(...)))
+end
+lor_pythonize.min = min
 
 
 local function mro(obj)
@@ -226,12 +226,6 @@ setmetatable(_type, _type_meta)
 setmetatable(Class, {__tostring=Class.str, __cls__=_type})
 
 
-local function AbstractMethodError(obj, method_name)
-    error(('AbstractMethodError: %s does not have a concrete implementation of %s'):format(class(obj), method_name))
-end
-lor_pythonize.AbstractMethodError = AbstractMethodError
-
-
 local function class(cls, ...)
     --[[
     -- Construct a new class, or get an existing object's class, or get a Windower lib object's class name.
@@ -268,18 +262,33 @@ end
 lor_pythonize.class = class
 
 
-local function dir(cls)
-    local attrs = list()
-    local c = 1
-    for cls in reversed(mro(cls)) do
-        for func_name, func in pairs(cls) do
-            attrs[c] = func_name
-            c = c + 1
+local function isinstance(obj, ...)
+    local args = {...}
+    local obj_type = type(obj)
+    for val in iter(args) do
+        if obj_type == val then return true end
+    end
+    if obj_type == 'nil' then return false end  -- nil would have been caught above if it was specified
+
+    local meta = getmetatable(obj)
+    local obj_class = class(obj)
+    local obj_classname = obj_class and obj_class.__name__
+    if obj_class then
+        for val in iter(args) do
+            if (obj_class == val) or (obj_classname == val) then return true end
         end
     end
-    return attrs
+
+    if meta then
+        for cls in mro(obj) do
+            for val in iter(args) do
+                if (cls == val) or (cls.__name__ == val) then return true end
+            end
+        end
+    end
+    return false
 end
-lor_pythonize.dir = dir
+lor_pythonize.isinstance = isinstance
 
 
 local ABC = {}
@@ -658,6 +667,20 @@ local Counter = class({
     end
 }, dict)
 lor_pythonize.Counter = Counter
+
+
+local function dir(cls)
+    local attrs = list()
+    local c = 1
+    for cls in reversed(mro(cls)) do
+        for func_name, func in pairs(cls) do
+            attrs[c] = func_name
+            c = c + 1
+        end
+    end
+    return attrs
+end
+lor_pythonize.dir = dir
 
 
 function lor_pythonize.make_global()
